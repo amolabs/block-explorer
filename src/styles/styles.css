@@ -1,0 +1,26 @@
+.navbar-brand-name {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 0.5em;
+}
+
+.preview-header {
+    display: flex;
+}
+
+.block-preview-item {
+}
+
+.block-preview-item .block {
+    background-color: lightgray;
+    width: 10em;
+    align-items: center;
+    justify-content: center;
+}
+
+.block-preview-item  p {
+    margin: 0;
+}
+.block-preview-item  .block-info {
+    margin: 0.5em
+}
