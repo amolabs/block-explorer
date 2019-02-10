@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import '../styles/styles.css';
+import { Link } from 'react-router-dom';
 class NavBar extends Component {
 	render() {
 		return (
@@ -25,10 +26,14 @@ class NavBar extends Component {
 
 const NavBrand = () => {
 	return (
-		<div className="navbar-brand" href="/">
-			<img src={process.env.PUBLIC_URL + '/main.png'} width={30} />
+		<Link to="/" className="navbar-brand">
+			<img
+				src={process.env.PUBLIC_URL + '/main.png'}
+				width={30}
+				alt={'AMO'}
+			/>
 			<h3 className="navbar-brand-name">AMO Block Explorer</h3>
-		</div>
+		</Link>
 	);
 };
 
