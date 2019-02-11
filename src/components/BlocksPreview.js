@@ -7,7 +7,7 @@ class BlocksPreview extends Component {
 		return (
 			<ul className="list-group">
 				<PreviewHeader name="Blocks" to="/blocks" />
-				{this.props.blocks.map((block, i) => {
+				{this.props.blocks.map(block => {
 					return (
 						<BlockPreviewItem
 							block={block}

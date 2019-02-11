@@ -8,7 +8,7 @@ class TxsPreview extends Component {
 			<div>
 				<ul className="list-group">
 					<PreviewHeader name="Transactions" to="/txs" />
-					{this.props.txs.map((tx, i) => {
+					{this.props.txs.map(tx => {
 						return (
 							<TxsPreviewItem
 								tx={tx}
