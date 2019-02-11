@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import '../styles/styles.css';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 class NavBar extends Component {
 	render() {
 		return (
@@ -17,7 +17,7 @@ class NavBar extends Component {
 				</button>
 				<div className="collapse navbar-collapse flex-md-column">
 					<NavSearchBar />
-					<NavMenu />
+					<NavMenu pathName={this.props.location.pathname} />
 				</div>
 			</nav>
 		);
@@ -56,24 +56,29 @@ const NavSearchBar = () => {
 	);
 };
 
-const NavMenu = () => {
+const NavMenu = ({ pathName }) => {
+	console.log(pathName);
 	return (
 		<ul className="navbar-nav ml-auto small mb-2 mb-md-0">
-			<NavItem name={'Home'} link={'/'} />
-			<NavItem name={'Blocks'} link={'/'} />
-			<NavItem name={'Txs'} link={'/'} />
+			<NavItem name={'Home'} link={'/'} active={pathName === '/'} />
+			<NavItem
+				name={'Blocks'}
+				link={'/blocks'}
+				active={pathName === '/blocks'}
+			/>
+			<NavItem name={'Txs'} link={'/txs'} active={pathName === '/txs'} />
 		</ul>
 	);
 };
 
 const NavItem = ({ name, link, active }) => {
 	return (
-		<li className={'nav-item ' + active ? 'active' : ''}>
-			<a className="nav-link" href={link}>
-				<h5>{name}</h5>
-			</a>
+		<li className={'nav-item' + (active ? ' active' : '')}>
+			<Link className="nav-link" to={link}>
+				<h5 className="nav-item-text">{name}</h5>
+			</Link>
 		</li>
 	);
 };
 
-export default NavBar;
+export default withRouter(NavBar);

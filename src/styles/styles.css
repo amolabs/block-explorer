@@ -4,6 +4,27 @@
     margin: 0 0.5em;
 }
 
+.navbar {
+    padding-bottom: 0;
+}
+
+.navbar-nav{
+    margin-top: 1em;
+}
+
+.nav-item {
+    border-bottom: 5px solid transparent;
+}
+
+.nav-item.active{
+    border-bottom: 5px solid lightblue;
+}
+
+.nav-item-text {
+    margin-bottom: 0;
+}
+
+
 .preview-header {
     display: flex;
 }
