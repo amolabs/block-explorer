@@ -1,24 +1,22 @@
 ## AMO Block Explorer
 Block explorer for AMO
-
-### Environment
-- `create-react-app`: v2.1.2
+- Subscribe block events including new block event and new tx event via websocket JSON RPC
+- Show block information (hash, height, number of tx, timestamp, parent hash, miner)
+- Show tx information (hash, from, to, timestamp, amount, block hash)
 
 ### Quick-start
 - Install [node.js](https://nodejs.org/en/) (recommend LTS)
-- Install `create-react-app` by running:
+- Install dependencies by running:
 ```bash
-npm install create-react-app
+npm install
 ```
 - Run the app
 ```bash
 npm start
 ```
-- In MacOS, a chrome browser will start automatically.
-    - TODO: What about other OS?
-- TODO: Add production build steps.
+- App will start automatically on default web browser.
 
-### Development
-- Subscribe block events including new block event and new tx event via websocket JSON RPC
-- Show block information (hash, height, number of tx, timestamp, parent hash, miner)
-- Show tx information (hash, from, to, timestamp, amount, block hash)
+#### Production build
+```bash
+npm run build
+```
