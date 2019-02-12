@@ -8,13 +8,14 @@ Block explorer for AMO
 - Install [node.js](https://nodejs.org/en/) (recommend LTS)
 - Install dependencies by running:
 ```bash
-npm install
+npm install --no-optional
 ```
-- Run the app
+- Run the app by running:
 ```bash
 npm start
 ```
-- App will start automatically on default web browser.
+- A daemon will start on localhost at port 3000.
+- In desktop-class OSes, app will automatically launch a default web browser window.
 
 #### Production build
 ```bash
