@@ -22,19 +22,19 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+            - npm-dependencies-{{ checksum "package.json" }}
             # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+            - npm-dependencies-
 
-      - run: yarn install
+      - run: npm install --no-optional
 
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
-
-      # perform production build for testing
-      - run: npm run build
+          key: npm-dependencies-{{ checksum "package.json" }}
 
       # run tests!
       #- run: yarn test
+
+      # Since there is no test codes yet, just perform production build.
+      - run: npm run build
