@@ -2,21 +2,35 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { getBlocks } from '../rpc';
 import moment from 'moment';
+import PageNav from '../components/PageNav';
+import queryString from 'query-string';
+
+const blocksPerPage = 15;
 
 class Blocks extends Component {
 	state = {
 		blocks: [],
 	};
 
+	getPageQuery = () => {
+		const pageQuery = queryString.parse(this.props.location.search).p;
+		if (pageQuery) return parseInt(pageQuery);
+		else return 1;
+	};
+
 	fetchBlocks = () => {
-		getBlocks(this.props.latestHeight, blocksPerPages, result => {
+		const startHeight =
+			this.props.latestHeight - (this.getPageQuery() - 1) * blocksPerPage;
+		getBlocks(startHeight, blocksPerPage, result => {
 			this.setState({ blocks: result });
 		});
 	};
 
 	componentDidMount() {
 		// fetch blocks on component mount (for router)
-		if (this.props.latestHeight != null) this.fetchBlocks();
+		if (this.props.latestHeight != null) {
+			this.fetchBlocks();
+		}
 	}
 
 	componentDidUpdate(prevProps) {
@@ -43,6 +57,12 @@ class Blocks extends Component {
 						})}
 					</tbody>
 				</table>
+				<PageNav
+					baseURL={'/blocks'}
+					totalItem={this.props.latestHeight}
+					itemPerPage={blocksPerPage}
+					currentPage={this.getPageQuery()}
+				/>
 			</div>
 		);
 	}

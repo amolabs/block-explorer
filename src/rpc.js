@@ -44,9 +44,11 @@ export const getBlockByHeight = (height, callback) => {
 
 export const getBlocks = (height, count, callback) => {
 	Promise.all(
-		Array.from(Array(count).keys()).map(i => {
-			return axios.get(`${curlURL}/block?height=${height - i}`);
-		})
+		Array.from(Array(count).keys()).reduce((result, i) => {
+			if (height - i > 0)
+				result.push(axios.get(`${curlURL}/block?height=${height - i}`));
+			return result;
+		}, [])
 	).then(responses => {
 		callback(
 			responses
