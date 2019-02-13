@@ -11,7 +11,7 @@ class BlocksPreview extends Component {
 					return (
 						<BlockPreviewItem
 							block={block}
-							key={block.hash}
+							key={block.height}
 							onClick={this.onItemClick}
 						/>
 					);

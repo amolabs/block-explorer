@@ -9,8 +9,8 @@ class Blocks extends Component {
 	};
 
 	fetchBlocks = () => {
-		getBlocks(this.props.latestHeight, 10, res => {
-			this.setState({ blocks: res });
+		getBlocks(this.props.latestHeight, blocksPerPages, result => {
+			this.setState({ blocks: result });
 		});
 	};
 
@@ -37,7 +37,7 @@ class Blocks extends Component {
 								<BlockTableItem
 									block={block}
 									onClick={this.onItemClick}
-									key={block.hash}
+									key={block.height}
 								/>
 							);
 						})}
@@ -75,7 +75,7 @@ const BlockTableItem = ({ block, onClick }) => {
 		return <td className={`row-item col-md-${col}`}>{content}</td>;
 	};
 	return (
-		<tr onClick={() => onClick(block.hash)}>
+		<tr onClick={() => onClick(block.height)}>
 			<RowItem content={block.height} col={1} />
 			<RowItem content={block.hash} col={4} />
 			<RowItem content={block.miner} col={4} />

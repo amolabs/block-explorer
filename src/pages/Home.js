@@ -10,8 +10,8 @@ class Home extends Component {
 	};
 
 	fetchBlocks = () => {
-		getBlocks(this.props.latestHeight, 10, res => {
-			this.setState({ blocks: res });
+		getBlocks(this.props.latestHeight, 10, result => {
+			this.setState({ blocks: result });
 		});
 	};
 

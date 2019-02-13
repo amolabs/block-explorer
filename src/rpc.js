@@ -36,7 +36,7 @@ export const getLatestBlock = callback => {
 	});
 };
 
-export const getBlock = (height, callback) => {
+export const getBlockByHeight = (height, callback) => {
 	axios.get(`${curlURL}/block?height=${height}`).then(res => {
 		callback(refineBlockData(res.data.result));
 	});
