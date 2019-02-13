@@ -28,7 +28,7 @@ const BlockPreviewItem = ({ block, onClick }) => {
 	return (
 		<li
 			className="list-group-item d-flex block-preview-item"
-			onClick={() => onClick(block.hash)}
+			onClick={() => onClick(block.height)}
 		>
 			<div className="block d-flex flex-column">
 				<div>Block</div>
