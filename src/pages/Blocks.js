@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { getBlocks } from '../rpc';
+import moment from 'moment';
 
 class Blocks extends Component {
 	state = {
@@ -79,7 +80,7 @@ const BlockTableItem = ({ block, onClick }) => {
 			<RowItem content={block.hash} col={4} />
 			<RowItem content={block.miner} col={4} />
 			<RowItem content={block.numTx} col={1} />
-			<RowItem content={block.timestamp} col={2} />
+			<RowItem content={moment(block.timestamp).fromNow(true)} col={2} />
 		</tr>
 	);
 };
