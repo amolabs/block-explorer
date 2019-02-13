@@ -37,7 +37,7 @@ const BlockPreviewItem = ({ block, onClick }) => {
 			<div className="block-info">
 				<p>hash: {block.hash}</p>
 				<p>mined by: {block.miner}</p>
-				<p>{block.transaction} transactions</p>
+				<p>{block.numTx} transactions</p>
 			</div>
 		</li>
 	);

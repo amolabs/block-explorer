@@ -1,37 +1,34 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import { getBlocks } from '../rpc';
 
 class Blocks extends Component {
 	state = {
-		blocks: [
-			{
-				height: 1,
-				hash: '0e1341212351',
-				miner: '0xd2123422',
-				transaction: 10,
-				timestamp: 'time',
-			},
-			{
-				height: 2,
-				hash: '0e1341212352',
-				miner: '0xd2123422',
-				transaction: 10,
-				timestamp: 'time',
-			},
-			{
-				height: 3,
-				hash: '0e1341212353',
-				miner: '0xd2123422',
-				transaction: 10,
-				timestamp: 'time',
-			},
-		],
+		blocks: [],
 	};
+
+	fetchBlocks = () => {
+		getBlocks(this.props.latestHeight, 10, res => {
+			this.setState({ blocks: res });
+		});
+	};
+
+	componentDidMount() {
+		// fetch blocks on component mount (for router)
+		if (this.props.latestHeight != null) this.fetchBlocks();
+	}
+
+	componentDidUpdate(prevProps) {
+		// fetch blocks if latest height changed
+		if (this.props.latestHeight !== prevProps.latestHeight) {
+			this.fetchBlocks();
+		}
+	}
 
 	render() {
 		return (
 			<div className="container-fluid">
-				<table className="table table-striped">
+				<table className="table table-striped block-table">
 					<BlockTableHeader />
 					<tbody>
 						{this.state.blocks.map(block => {
@@ -55,29 +52,34 @@ class Blocks extends Component {
 }
 
 const BlockTableHeader = () => {
-	const CenteredTh = ({ name }) => {
-		return <th style={{ textAlign: 'center' }}>{name}</th>;
+	const HeaderItem = ({ name, col }) => {
+		return <th className={`header-item col-md-${col}`}>{name}</th>;
 	};
 
 	return (
 		<thead>
 			<tr>
-				<CenteredTh name="Height" />
-				<CenteredTh name="Hash" />
-				<CenteredTh name="Miner" />
-				<CenteredTh name="Age" />
+				<HeaderItem name="Height" col={1} />
+				<HeaderItem name="Hash" col={4} />
+				<HeaderItem name="Miner" col={4} />
+				<HeaderItem name="Tx" col={1} />
+				<HeaderItem name="Age" col={2} />
 			</tr>
 		</thead>
 	);
 };
 
 const BlockTableItem = ({ block, onClick }) => {
+	const RowItem = ({ content, col }) => {
+		return <td className={`row-item col-md-${col}`}>{content}</td>;
+	};
 	return (
 		<tr onClick={() => onClick(block.hash)}>
-			<td align="center">{block.height}</td>
-			<td>{block.hash}</td>
-			<td align="center">{block.miner}</td>
-			<td align="center">{block.timestamp}</td>
+			<RowItem content={block.height} col={1} />
+			<RowItem content={block.hash} col={4} />
+			<RowItem content={block.miner} col={4} />
+			<RowItem content={block.numTx} col={1} />
+			<RowItem content={block.timestamp} col={2} />
 		</tr>
 	);
 };

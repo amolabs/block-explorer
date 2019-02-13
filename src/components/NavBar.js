@@ -57,7 +57,6 @@ const NavSearchBar = () => {
 };
 
 const NavMenu = ({ pathName }) => {
-	console.log(pathName);
 	return (
 		<ul className="navbar-nav ml-auto small mb-2 mb-md-0">
 			<NavItem name={'Home'} link={'/'} active={pathName === '/'} />

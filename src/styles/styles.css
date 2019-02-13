@@ -34,14 +34,31 @@
 
 .block-preview-item .block {
     background-color: lightgray;
-    width: 10em;
+    width: 20em ;
     align-items: center;
     justify-content: center;
 }
 
 .block-preview-item  p {
     margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 .block-preview-item  .block-info {
-    margin: 0.5em
+    overflow: hidden;
+    margin: 0.5em;
+}
+
+.block-table .header-item{
+    text-align: center;
+    display: inline-block;
+}
+
+.block-table .row-item {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
 }
