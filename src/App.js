@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
 
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
@@ -37,43 +37,45 @@ class App extends Component {
 
 	render() {
 		return (
-			<div>
-				<NavBar />
-				<Switch>
-					<Route
-						exact
-						path="/"
-						render={props => (
-							<Home
-								{...props}
-								latestHeight={this.state.latestHeight}
-							/>
-						)}
-					/>
-					<Route
-						exact
-						path="/blocks"
-						component={props => (
-							<Blocks
-								{...props}
-								latestHeight={this.state.latestHeight}
-							/>
-						)}
-					/>
-					<Route exact path="/txs" component={Transactions} />
+			<BrowserRouter>
+				<div>
+					<NavBar />
+					<Switch>
+						<Route
+							exact
+							path="/"
+							render={props => (
+								<Home
+									{...props}
+									latestHeight={this.state.latestHeight}
+								/>
+							)}
+						/>
+						<Route
+							exact
+							path="/blocks"
+							component={props => (
+								<Blocks
+									{...props}
+									latestHeight={this.state.latestHeight}
+								/>
+							)}
+						/>
+						<Route exact path="/txs" component={Transactions} />
 
-					<Route
-						exact
-						path="/block/:blockHeight"
-						component={props => (
-							<Block
-								{...props}
-								latestHeight={this.state.latestHeight}
-							/>
-						)}
-					/>
-				</Switch>
-			</div>
+						<Route
+							exact
+							path="/block/:blockHeight"
+							component={props => (
+								<Block
+									{...props}
+									latestHeight={this.state.latestHeight}
+								/>
+							)}
+						/>
+					</Switch>
+				</div>
+			</BrowserRouter>
 		);
 	}
 }
