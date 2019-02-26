@@ -41,23 +41,19 @@ export const getBlockByHeight = (height, callback) => {
 		callback(refineBlockData(res.data.result));
 	});
 };
-
 export const getBlocks = (height, count, callback) => {
-	Promise.all(
-		Array.from(Array(count).keys()).reduce((result, i) => {
-			if (height - i > 0)
-				result.push(axios.get(`${curlURL}/block?height=${height - i}`));
-			return result;
-		}, [])
-	).then(responses => {
-		callback(
-			responses
-				.map(res => {
-					return refineBlockData(res.data.result);
-				})
-				.sort((l, r) => {
+	const start = Math.max(1, height - count + 1);
+	const size = Math.min(count, height);
+
+	axios
+		.get(`${curlURL}/dump_blocks?start=${start}&size=${size}`)
+		.then(res => {
+			callback(
+				res.data.result.Blocks.map(block => {
+					return refineBlockData(block);
+				}).sort((l, r) => {
 					return r.height - l.height;
 				})
-		);
-	});
+			);
+		});
 };
