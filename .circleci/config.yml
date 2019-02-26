@@ -34,7 +34,7 @@ jobs:
           key: npm-dependencies-{{ checksum "package.json" }}
 
       # run tests!
-      #- run: yarn test
+      - run: make test
 
       # Since there is no test codes yet, just perform production build.
-      - run: npm run build
+      - run: make build
