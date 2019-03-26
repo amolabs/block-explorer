@@ -90,6 +90,18 @@ export const getRecentBlocks = callback => {
 };
 
 /* tx related rpc */
+export const getTxByHash = (hash, callback) => {
+	axios.get(`${curlURL}/tx?hash=0x${hash}`).then(res => {
+		const hash = res.data.result.hash;
+		const txMsg = res.data.result.tx;
+
+		callback({
+			hash: hash,
+			...JSON.parse(atob(txMsg)),
+		});
+	});
+};
+
 export const getRecentTxs = callback => {
 	getRecentBlocks(blocks => {
 		const promises = blocks

@@ -65,7 +65,6 @@ const NavMenu = ({ pathName }) => {
 				link={'/blocks'}
 				active={pathName === '/blocks'}
 			/>
-			<NavItem name={'Txs'} link={'/txs'} active={pathName === '/txs'} />
 		</ul>
 	);
 };
