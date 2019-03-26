@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import BlocksPreview from '../components/BlocksPreview';
 import TxsPreview from '../components/TxsPreview';
-import { getBlocks } from '../rpc';
+import { getRecentBlocks, getRecentTxs, startSubscribe } from '../rpc';
 
 class Home extends Component {
 	state = {
@@ -9,22 +9,31 @@ class Home extends Component {
 		txs: [],
 	};
 
-	fetchBlocks = () => {
-		getBlocks(this.props.latestHeight, 10, result => {
-			this.setState({ blocks: result });
+	fetchBlock = () => {
+		getRecentBlocks(result => {
+			this.setState({ blocks: result.slice(0, 10) });
 		});
 	};
 
-	componentDidMount() {
-		// fetch blocks on component mount (for router)
-		if (this.props.latestHeight != null) this.fetchBlocks();
-	}
+	fetchTx = () => {
+		getRecentTxs(result => {
+			this.setState({ txs: result });
+		});
+	};
 
-	componentDidUpdate(prevProps) {
-		// fetch blocks if latest height changed
-		if (this.props.latestHeight !== prevProps.latestHeight) {
-			this.fetchBlocks();
-		}
+	onNewBlock = () => {
+		this.fetchBlock();
+		this.fetchTx();
+	};
+	onWsError = e => {
+		console.error('web socket error: ', e);
+		alert('Please check if Tendermint is running and then refresh.');
+	};
+
+	componentDidMount() {
+		this.fetchBlock();
+		this.fetchTx();
+		startSubscribe(this.onNewBlock, this.onWsError);
 	}
 
 	render() {

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { getBlocks } from '../rpc';
+import { getBlocks, getLastHeight } from '../rpc';
 import moment from 'moment';
 import PageNav from '../components/PageNav';
 import queryString from 'query-string';
@@ -9,6 +9,7 @@ const blocksPerPage = 15;
 
 class Blocks extends Component {
 	state = {
+		lastHeight: null,
 		blocks: [],
 	};
 
@@ -19,25 +20,29 @@ class Blocks extends Component {
 	};
 
 	fetchBlocks = () => {
-		const startHeight =
-			this.props.latestHeight - (this.getPageQuery() - 1) * blocksPerPage;
-		getBlocks(startHeight, blocksPerPage, result => {
-			this.setState({ blocks: result });
+		const page = this.getPageQuery();
+
+		getLastHeight(lastHeight => {
+			getBlocks(
+				lastHeight - (page - 1) * blocksPerPage,
+				blocksPerPage,
+				result => {
+					this.setState({
+						lastHeight: lastHeight,
+						blocks: result,
+					});
+				}
+			);
 		});
 	};
 
 	componentDidMount() {
-		// fetch blocks on component mount (for router)
-		if (this.props.latestHeight != null) {
-			this.fetchBlocks();
-		}
+		this.fetchBlocks();
 	}
 
 	componentDidUpdate(prevProps) {
-		// fetch blocks if latest height changed
-		if (this.props.latestHeight !== prevProps.latestHeight) {
+		if (prevProps.location.search !== this.props.location.search)
 			this.fetchBlocks();
-		}
 	}
 
 	render() {
@@ -59,7 +64,7 @@ class Blocks extends Component {
 				</table>
 				<PageNav
 					baseURL={'/blocks'}
-					totalItem={this.props.latestHeight}
+					totalItem={this.state.lastHeight}
 					itemPerPage={blocksPerPage}
 					currentPage={this.getPageQuery()}
 				/>

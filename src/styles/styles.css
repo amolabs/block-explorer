@@ -50,6 +50,17 @@
     margin: 0.5em;
 }
 
+.tx-preview-item  p {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.tx-preview-item  .tx-info {
+    overflow: hidden;
+    margin: 0.5em;
+}
+
 .block-table .header-item{
     text-align: center;
     display: inline-block;

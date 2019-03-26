@@ -6,7 +6,7 @@ const PreviewHeader = ({ name, to }) => {
 		<li className="list-group-item preview-header">
 			<h4>{name}</h4>
 			<Link to={to} className="ml-auto">
-				<button>View All</button>
+				<button className="btn btn-secondary">View All</button>
 			</Link>
 		</li>
 	);
