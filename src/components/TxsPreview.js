@@ -33,21 +33,25 @@ const TxsPreviewItem = ({ tx, onClick }) => {
 			className="list-group-item d-flex flex-column tx-preview-item"
 			onClick={() => onClick(tx.hash)}
 		>
-			<div>
-				<h6>{tx.type}</h6>
+			<div className="row tx-info">
+				<p className="col-10">{tx.hash}</p>
+				<p className="col-2">
+					<b>{tx.type}</b>
+				</p>
 			</div>
-			<div className="d-flex">
-				<div className=" tx-info">
-					<p>
-						{tx.sender} <br />
-						<i className="fa fa-arrow-right" /> {tx.param.to}
-					</p>
-				</div>
-				<div className="ml-auto align-self-center">
-					{tx.param.amount} AMO
-				</div>
-			</div>
+			<TxDetail name="sender" content={tx.sender} />
+			{Object.keys(tx.param).map(key => {
+				return <TxDetail name={key} content={tx.param[key]} />;
+			})}
 		</li>
+	);
+};
+const TxDetail = ({ name, content }) => {
+	return (
+		<div className="row tx-info">
+			<p className="col-2">{name}</p>
+			<p className="col-10">{content}</p>
+		</div>
 	);
 };
 

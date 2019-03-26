@@ -58,7 +58,6 @@
 }
 .tx-preview-item  .tx-info {
     overflow: hidden;
-    margin: 0.5em;
 }
 
 .block-table .header-item{
@@ -67,6 +66,19 @@
 }
 
 .block-table .row-item {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+.tx-table .header-item{
+    text-align: center;
+    display: inline-block;
+}
+
+.tx-table .row-item {
     display: inline-block;
     overflow: hidden;
     white-space: nowrap;
