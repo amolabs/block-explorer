@@ -124,3 +124,20 @@ export const getRecentTxs = callback => {
 		});
 	});
 };
+
+/* query related rpc */
+export const abciQuery = (type, params, onSuccess, onError) => {
+	let data;
+	// in case query has single parameter
+	if (Object.keys(params).length === 1)
+		data = '\\"' + params[Object.keys(params)[0]] + '\\"';
+	// in case query has multiple parameter
+	else data = JSON.stringify(params).replace(/"/g, '\\"');
+
+	axios
+		.get(`${curlURL}/abci_query?path="/${type}"&data="${data}"`)
+		.then(res => {
+			if (res.data.error) onError(res.data.error);
+			else onSuccess(res.data.result.response);
+		});
+};

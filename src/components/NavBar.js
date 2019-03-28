@@ -65,6 +65,11 @@ const NavMenu = ({ pathName }) => {
 				link={'/blocks'}
 				active={pathName === '/blocks'}
 			/>
+			<NavItem
+				name={'Query'}
+				link={'/query'}
+				active={pathName === '/query'}
+			/>
 		</ul>
 	);
 };

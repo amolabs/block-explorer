@@ -5,6 +5,7 @@ import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import Blocks from './pages/Blocks';
 import Block from './pages/Block';
+import Query from './pages/Query';
 import Tx from './pages/Tx';
 
 class App extends Component {
@@ -22,6 +23,7 @@ class App extends Component {
 							component={Block}
 						/>
 						<Route exact path="/tx/:txHash" component={Tx} />
+						<Route exact path="/query" component={Query} />
 					</Switch>
 				</div>
 			</BrowserRouter>
