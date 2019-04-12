@@ -1,7 +1,9 @@
 import axios from 'axios';
 import sha256 from 'sha256';
 
-const URL = 'localhost:26657';
+//const URL = 'localhost:26657';
+//const URL = '192.168.50.88:26657';
+const URL = '139.162.116.176:26657';
 const wsURL = `ws://${URL}/websocket`;
 const curlURL = `http://${URL}`;
 
