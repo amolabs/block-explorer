@@ -20,7 +20,7 @@ export const startSubscribe = (onNewBlock, onError) => {
 				id: 'newBlock',
 				params: {
 					query: "tm.event='NewBlock'",
-				},
+				}
 			})
 		);
 	};
@@ -40,7 +40,7 @@ const refineBlockMeta = meta => {
 	return {
 		hash: meta.block_id.hash,
 		height: meta.header.height,
-		miner: meta.header.validators_hash,
+		proposer: meta.header.validators_hash,
 		numTx: meta.header.num_txs,
 		timestamp: meta.header.time,
 	};

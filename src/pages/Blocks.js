@@ -87,7 +87,7 @@ const BlockTableHeader = () => {
 			<tr>
 				<HeaderItem name="Height" col={1} />
 				<HeaderItem name="Hash" col={4} />
-				<HeaderItem name="Miner" col={4} />
+				<HeaderItem name="Proposer" col={4} />
 				<HeaderItem name="Tx" col={1} />
 				<HeaderItem name="Age" col={2} />
 			</tr>
@@ -103,7 +103,7 @@ const BlockTableItem = ({ block, onClick }) => {
 		<tr onClick={() => onClick(block.height)}>
 			<RowItem content={block.height} col={1} />
 			<RowItem content={block.hash} col={4} />
-			<RowItem content={block.miner} col={4} />
+			<RowItem content={block.proposer} col={4} />
 			<RowItem content={block.numTx} col={1} />
 			<RowItem content={moment(block.timestamp).fromNow(true)} col={2} />
 		</tr>

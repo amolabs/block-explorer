@@ -7,7 +7,7 @@ class TxsPreview extends Component {
 		return (
 			<div>
 				<ul className="list-group">
-					<PreviewHeader name="Transactions" to="/txs" />
+					<PreviewHeader name="Recent Transactions" to="/txs" />
 					{this.props.txs.map(tx => {
 						return (
 							<TxsPreviewItem
@@ -34,10 +34,8 @@ const TxsPreviewItem = ({ tx, onClick }) => {
 			onClick={() => onClick(tx.hash)}
 		>
 			<div className="row tx-info">
-				<p className="col-10">{tx.hash}</p>
-				<p className="col-2">
-					<b>{tx.type}</b>
-				</p>
+				<p className="col-2"><b>{tx.type}</b></p>
+				<p className="col-10"><font color="grey"><i>hash</i>: {tx.hash}</font></p>
 			</div>
 			<TxDetail name="sender" content={tx.sender} />
 			{Object.keys(tx.param).map(key => {

@@ -34,7 +34,9 @@
 
 .block-preview-item .block {
     background-color: lightgray;
-    width: 20em ;
+    min-width: 5em;
+	padding-left: 1em;
+	padding-right: 1em;
     align-items: center;
     justify-content: center;
 }

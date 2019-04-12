@@ -6,7 +6,7 @@ class BlocksPreview extends Component {
 	render() {
 		return (
 			<ul className="list-group">
-				<PreviewHeader name="Blocks" to="/blocks" />
+				<PreviewHeader name="Recent Blocks" to="/blocks" />
 				{this.props.blocks.map(block => {
 					return (
 						<BlockPreviewItem
@@ -31,13 +31,11 @@ const BlockPreviewItem = ({ block, onClick }) => {
 			onClick={() => onClick(block.height)}
 		>
 			<div className="block d-flex flex-column">
-				<div>Block</div>
 				<div># {block.height}</div>
 			</div>
 			<div className="block-info">
 				<p>hash: {block.hash}</p>
-				<p>mined by: {block.miner}</p>
-				<p>{block.numTx} transactions</p>
+				<p>numTx: {block.numTx}</p>
 			</div>
 		</li>
 	);

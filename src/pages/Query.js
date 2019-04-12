@@ -36,6 +36,8 @@ class Query extends Component {
 						onInput={this.handleInput}
 						onQuery={this.handleQuery}
 					/>
+				</div>
+				<div className="row">
 					{this.state.result && <Result result={this.state.result} />}
 				</div>
 			</div>

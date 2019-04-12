@@ -7,7 +7,7 @@ class Block extends Component {
 		block: {
 			hash: null,
 			height: null,
-			miner: null,
+			proposer: null,
 			numTx: null,
 			timestamp: null,
 		},
@@ -27,10 +27,10 @@ class Block extends Component {
 			<div className="container">
 				<BlockInfo name="Hash" content={this.state.block.hash} />
 				<BlockInfo name="Height" content={this.state.block.height} />
-				<BlockInfo name="Miner" content={this.state.block.miner} />
+				<BlockInfo name="Proposer" content={this.state.block.proposer} />
 				<BlockInfo name="NumTx" content={this.state.block.numTx} />
 				<BlockInfo
-					name="timestamp"
+					name="Timestamp"
 					content={moment(this.state.block.timestamp).format()}
 				/>
 			</div>

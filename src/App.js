@@ -17,11 +17,7 @@ class App extends Component {
 					<Switch>
 						<Route exact path="/" component={Home} />
 						<Route exact path="/blocks" component={Blocks} />
-						<Route
-							exact
-							path="/block/:blockHeight"
-							component={Block}
-						/>
+						<Route exact path="/block/:blockHeight" component={Block} />
 						<Route exact path="/tx/:txHash" component={Tx} />
 						<Route exact path="/query" component={Query} />
 					</Switch>
