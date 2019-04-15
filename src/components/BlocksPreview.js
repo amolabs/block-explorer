@@ -35,6 +35,7 @@ const BlockPreviewItem = ({ block, onClick }) => {
 			</div>
 			<div className="block-info">
 				<p>hash: {block.hash}</p>
+				<p>time: {block.timestamp}</p>
 				<p>numTx: {block.numTx}</p>
 			</div>
 		</li>
