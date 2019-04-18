@@ -40,22 +40,23 @@ export const startSubscribe = (onNewBlock, onError) => {
 
 const refineBlockMeta = meta => {
 	return {
+		chain: meta.header.chain_id,
 		hash: meta.block_id.hash,
 		height: meta.header.height,
-		proposer: meta.header.validators_hash,
+		proposer: meta.header.proposer_address,
 		numTx: meta.header.num_txs,
 		timestamp: meta.header.time,
 	};
 };
 
-export const getLatestBlock = callback => {
+export const getLastBlock = callback => {
 	axios.get(`${curlURL}/block`).then(res => {
 		callback(refineBlockMeta(res.data.result.block_meta));
 	});
 };
 
 export const getLastHeight = callback => {
-	getLatestBlock(result => {
+	getLastBlock(result => {
 		callback(parseInt(result.height));
 	});
 };

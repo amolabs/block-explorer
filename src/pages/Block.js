@@ -5,6 +5,7 @@ import moment from 'moment';
 class Block extends Component {
 	state = {
 		block: {
+			chain: null,
 			hash: null,
 			height: null,
 			proposer: null,
@@ -25,6 +26,7 @@ class Block extends Component {
 	render() {
 		return (
 			<div className="container">
+				<BlockInfo name="Chain-ID" content={this.state.block.chain} />
 				<BlockInfo name="Hash" content={this.state.block.hash} />
 				<BlockInfo name="Height" content={this.state.block.height} />
 				<BlockInfo name="Proposer" content={this.state.block.proposer} />
