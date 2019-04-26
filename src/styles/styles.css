@@ -4,6 +4,10 @@
     margin: 0 0.5em;
 }
 
+.navbar-badge {
+	margin-top:10px;
+}
+
 .navbar {
     padding-bottom: 0;
 }

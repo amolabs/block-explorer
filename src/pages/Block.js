@@ -1,50 +1,116 @@
+// vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
-import { getBlockByHeight } from '../rpc';
-import moment from 'moment';
+import { withRouter } from 'react-router-dom';
+import { TextInput, KeyValueRow, accountLink, txLink, validatorLink } from '../util';
+import { fetchBlock } from '../rpc';
 
 class Block extends Component {
 	state = {
-		block: {
-			chain: null,
-			hash: null,
-			height: null,
-			proposer: null,
-			numTx: null,
-			timestamp: null,
-		},
-	};
-	fetchBlock = () => {
-		getBlockByHeight(this.props.match.params.blockHeight, result => {
-			this.setState({ block: result });
-		});
+		heightInput: this.props.match.params.height,
+		heightActive: this.props.match.params.height,
 	};
 
-	componentDidMount() {
-		this.fetchBlock();
+	componentDidUpdate(prevProps) {
+		if (this.props.match.params.height !== prevProps.match.params.height) {
+			const height = this.props.match.params.height;
+			this.setState({ heightInput: height, heightActive: height });
+		}
+	}
+
+	handleChange = (e) => {
+		this.setState({ heightInput: e.target.value });
+	}
+
+	handleSubmit = (e) => {
+		e.preventDefault();
+		if (this.state.heightInput) {
+			this.setState({ heightActive: this.state.heightInput });
+			this.props.history.push('/block/'+this.state.heightInput);
+		}
 	}
 
 	render() {
 		return (
 			<div className="container">
-				<BlockInfo name="Chain-ID" content={this.state.block.chain} />
-				<BlockInfo name="Hash" content={this.state.block.hash} />
-				<BlockInfo name="Height" content={this.state.block.height} />
-				<BlockInfo name="Proposer" content={this.state.block.proposer} />
-				<BlockInfo name="NumTx" content={this.state.block.numTx} />
-				<BlockInfo
-					name="Timestamp"
-					content={moment(this.state.block.timestamp).format()}
-				/>
+				<TextInput desc="Height" name="height"
+					value={this.state.heightInput}
+					onChange={this.handleChange}
+					onSubmit={this.handleSubmit}/>
+				<BlockDetail height={this.state.heightActive}/>
 			</div>
 		);
 	}
 }
-const BlockInfo = ({ name, content }) => {
+
+class BlockDetail extends Component {
+	state = {
+		block: {
+			height: null,
+			chain: null,
+			hash: null,
+			proposer: null,
+			numTx: null,
+			time: null,
+			txs: null,
+		}
+	};
+
+	componentDidMount() {
+		this.updateBlock();
+	}
+
+	componentDidUpdate(prevProps) {
+		if (this.props.height !== prevProps.height) {
+			this.updateBlock();
+		}
+	}
+
+	updateBlock = () => {
+		if (this.props.height) {
+			fetchBlock(this.props.height,
+				result => {
+					this.setState({ block: result });
+				}
+			);
+		}
+	};
+
+	render() {
+		var heightAlt = this.props.height;
+		if (!heightAlt) {
+			heightAlt = ( <span>Input block height to inspect &uarr;</span> );
+		}
+		// TODO: use validatorLink
+		const validator = validatorLink(this.state.block.proposer);
+		return (
+			<div className="container">
+				<KeyValueRow k="Height" v={heightAlt} />
+				<KeyValueRow k="Chain-ID" v={this.state.block.chain}/>
+				<KeyValueRow k="Proposer" v={validator}/>
+				<KeyValueRow k="Time" v={this.state.block.timestamp}/>
+				<KeyValueRow k="NumTx" v={this.state.block.numTx}/>
+				<TxBriefList txs={this.state.block.txs}/>
+			</div>
+		);
+	}
+}
+
+const TxBriefList = ({txs}) => {
+	if (!txs) txs = [];
 	return (
-		<p>
-			{name} : {content}
-		</p>
+		<ul>
+			{ txs.map((tx) => {
+				return (<TxBriefItem key={tx.hash} tx={tx}/>);
+			}) }
+		</ul>
 	);
 };
 
-export default Block;
+const TxBriefItem = ({tx}) => {
+	return (
+		<li key={tx.hash}>TxHash: {txLink(tx.hash)}<br/>
+			Sender: {accountLink(tx.sender)}, Type: {tx.type}</li>
+	);
+};
+
+export default withRouter(Block);

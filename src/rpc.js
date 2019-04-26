@@ -1,3 +1,4 @@
+// vim: set noexpandtab ts=2 sw=2 :
 import axios from 'axios';
 import sha256 from 'sha256';
 
@@ -38,7 +39,7 @@ export const startSubscribe = (onNewBlock, onError) => {
 
 /* block related rpc */
 
-const refineBlockMeta = meta => {
+const formatBlockHeader = meta => {
 	return {
 		chain: meta.header.chain_id,
 		hash: meta.block_id.hash,
@@ -49,25 +50,49 @@ const refineBlockMeta = meta => {
 	};
 };
 
-export const getLastBlock = callback => {
+const formatBlock = blk => {
+	if (!blk.data.txs) {
+		blk.data.txs = [];
+	}
+	return {
+		chain: blk.header.chain_id,
+		height: blk.header.height,
+		proposer: blk.header.proposer_address,
+		numTx: blk.header.num_txs,
+		timestamp: blk.header.time,
+		txs: blk.data.txs.map(a => {
+			var tx = JSON.parse(atob(a));
+			tx.hash = sha256(atob(a));
+			return tx;
+		}),
+	};
+};
+
+export const fetchLastBlock = callback => {
 	axios.get(`${curlURL}/block`).then(res => {
-		callback(refineBlockMeta(res.data.result.block_meta));
+		callback(formatBlockHeader(res.data.result.block_meta));
 	});
 };
 
-export const getLastHeight = callback => {
-	getLastBlock(result => {
+export const fetchLastHeight = callback => {
+	fetchLastBlock(result => {
 		callback(parseInt(result.height));
 	});
 };
 
-export const getBlockByHeight = (height, callback) => {
-	axios.get(`${curlURL}/block?height=${height}`).then(res => {
-		callback(refineBlockMeta(res.data.result.block_meta));
-	});
+export const fetchBlock = (height, callback) => {
+	axios.get(`${curlURL}/block?height=${height}`).then(
+		res => {
+			if ('error' in res.data) {
+				callback({});
+			} else {
+				callback(formatBlock(res.data.result.block));
+			}
+		}
+	);
 };
 
-export const getBlocks = (maxHeight, count, callback) => {
+export const fetchBlockMetas = (maxHeight, count, callback) => {
 	const minHeight = Math.max(1, maxHeight - count + 1);
 	axios
 		.get(
@@ -76,24 +101,51 @@ export const getBlocks = (maxHeight, count, callback) => {
 		.then(res => {
 			callback(
 				res.data.result.block_metas.map(meta => {
-					return refineBlockMeta(meta);
+					return formatBlockHeader(meta);
 				})
 			);
 		});
 };
 
-export const getRecentBlocks = callback => {
+export const fetchRecentBlockHeaders = callback => {
+	// will retrieve most recent 20 block headers
 	axios.get(`${curlURL}/blockchain`).then(res => {
 		callback(
 			res.data.result.block_metas.map(meta => {
-				return refineBlockMeta(meta);
+				return formatBlockHeader(meta);
 			})
 		);
 	});
 };
 
 /* tx related rpc */
-export const getTxByHash = (hash, callback) => {
+const refineTxMeta = meta => {
+	return {
+		hash: meta.hash,
+		height: meta.height,
+		index: meta.index,
+		txResult: meta.tx_result,
+		sender: meta.tx.sender,
+		type: meta.tx.type,
+		nonce: meta.tx.nonce,
+	};
+};
+
+export const fetchTx = (hash, callback) => {
+	axios.get(`${curlURL}/tx?hash=0x${hash}`).then(
+		res => {
+			if ('error' in res.data) {
+				callback({});
+			} else {
+				var txMeta = res.data.result;
+				txMeta.tx = JSON.parse(atob(res.data.result.tx));
+				callback(refineTxMeta(txMeta));
+			}
+		}
+	);
+};
+
+export const getTx = (hash, callback) => {
 	axios.get(`${curlURL}/tx?hash=0x${hash}`).then(res => {
 		const hash = res.data.result.hash;
 		const txMsg = res.data.result.tx;
@@ -105,8 +157,8 @@ export const getTxByHash = (hash, callback) => {
 	});
 };
 
-export const getRecentTxs = callback => {
-	getRecentBlocks(blocks => {
+export const fetchRecentTxs = callback => {
+	fetchRecentBlockHeaders(blocks => {
 		const promises = blocks
 			.filter(b => b.numTx > 0)
 			.map(b => axios.get(`${curlURL}/block?height=${b.height}`));
@@ -114,33 +166,67 @@ export const getRecentTxs = callback => {
 		Promise.all(promises).then(responses => {
 			callback(
 				[]
-					.concat(
-						...responses.map(res => res.data.result.block.data.txs)
-					)
-					.map(tx => {
-						return {
-							hash: sha256(atob(tx)),
-							...JSON.parse(atob(tx)),
-						};
-					})
+				.concat(
+					...responses.map(res => res.data.result.block.data.txs)
+				)
+				.map(tx => {
+					return {
+						hash: sha256(atob(tx)),
+						...JSON.parse(atob(tx)),
+					};
+				})
 			);
 		});
 	});
 };
 
+export const fetchAccountByAddress = (address, callback) => {
+	var account = { address: address }
+
+	callback( account );
+};
+
+export const fetchBalance = (address, callback) => {
+	abciQuery('balance', address,
+		res => { callback(parseBalance(res)); },
+		err => { callback(0); }
+	);
+};
+
+function parseBalance(result) {
+	return JSON.parse(atob(result)); // see btoa() also
+}
+
+export const fetchStake = (address, callback) => {
+	abciQuery('stake', address,
+		res => { callback(parseStake(res)); },
+		err => { callback(0); }
+	);
+};
+
+function parseStake(result) {
+	var parsed = JSON.parse(atob(result));
+	if (!parsed) parsed = {amount:0,validator:[]};
+	const stake = {
+		amount: parsed.amount,
+		validator: bytes2hex(parsed.validator),
+	};
+	return stake
+}
+
+function bytes2hex(bytes) {
+	return bytes.map(b => {return b.toString(16);}).join('');
+}
+
 /* query related rpc */
 export const abciQuery = (type, params, onSuccess, onError) => {
 	let data;
-	// in case query has single parameter
-	if (Object.keys(params).length === 1)
-		data = '\\"' + params[Object.keys(params)[0]] + '\\"';
-	// in case query has multiple parameter
-	else data = JSON.stringify(params).replace(/"/g, '\\"');
+	data = JSON.stringify(params).replace(/"/g, '\\"');
 
 	axios
 		.get(`${curlURL}/abci_query?path="/${type}"&data="${data}"`)
 		.then(res => {
 			if (res.data.error) onError(res.data.error);
-			else onSuccess(res.data.result.response);
+			else onSuccess(res.data.result.response.value);
 		});
 };

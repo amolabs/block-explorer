@@ -1,46 +1,94 @@
+// vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
-import { getTxByHash } from '../rpc';
+import { withRouter } from 'react-router-dom';
+import { TextInput, KeyValueRow, accountLink, blockLink } from '../util';
+import { fetchTx } from '../rpc';
 
 class Tx extends Component {
 	state = {
-		tx: {
-			hash: null,
-			sender: null,
-			param: null,
-		},
+		txHashInput: this.props.match.params.txHash,
+		txHashActive: this.props.match.params.txHash,
 	};
 
-	fetchTx = () => {
-		getTxByHash(this.props.match.params.txHash, result => {
-			console.log(result);
-			this.setState({ tx: result });
-		});
-	};
+	componentDidUpdate(prevProps) {
+		if (this.props.match.params.txHash !== prevProps.match.params.txHash) {
+			const txHash = this.props.match.params.txHash;
+			this.setState({ txHashInput: txHash, txHashActive: txHash });
+		}
+	}
 
-	componentDidMount() {
-		this.fetchTx();
+	handleChange = (e) => {
+		this.setState({ txHashInput: e.target.value });
+	}
+
+	handleSubmit = (e) => {
+		e.preventDefault();
+		if (this.state.txHashInput) {
+			this.setState({ txHashActive: this.state.txHashInput });
+			this.props.history.push('/tx/'+this.state.txHashInput);
+		}
 	}
 
 	render() {
 		return (
 			<div className="container">
-				<TxInfo name="Hash" content={this.state.tx.hash} />
-				<TxInfo name="Sender" content={this.state.tx.sender} />
-				{this.state.tx.param &&
-					Object.keys(this.state.tx.param).map(key => (
-						<TxInfo name={key} content={this.state.tx.param[key]} />
-					))}
+				<TextInput desc="TxHash" name="txHash"
+					value={this.state.txHashInput}
+					onChange={this.handleChange}
+					onSubmit={this.handleSubmit}/>
+				<TxDetail txHash={this.state.txHashActive}/>
 			</div>
 		);
 	}
 }
 
-const TxInfo = ({ name, content }) => {
-	return (
-		<p>
-			{name} : {content}
-		</p>
-	);
-};
+class TxDetail extends Component {
+	state = {
+		tx: {
+		}
+	};
 
-export default Tx;
+	componentDidMount() {
+		this.updateTx();
+	}
+
+	componentDidUpdate(prevProps) {
+		if (this.props.txHash !== prevProps.txHash) {
+			this.updateTx();
+		}
+	}
+
+	updateTx = () => {
+		if (this.props.txHash) {
+			fetchTx(this.props.txHash,
+				result => {
+					this.setState({ tx: result });
+				}
+			);
+		}
+	};
+
+	render() {
+		var txHashAlt = this.props.txHash;
+		if (!txHashAlt) {
+			txHashAlt = ( <span>Input transaction hash to inspect &uarr;</span> );
+		}
+		const sender = accountLink(this.state.tx.sender);
+		const position = (
+			<span> index {this.state.tx.index} in
+				a block at height {blockLink(this.state.tx.height)}
+			</span>
+		);
+		return (
+			<div className="container">
+				<KeyValueRow k="TxHash" v={txHashAlt} />
+				<KeyValueRow k="Position" v={position} />
+				<KeyValueRow k="Sender" v={sender} />
+				<KeyValueRow k="Type" v={this.state.tx.type} />
+				<KeyValueRow k="Nonce" v={this.state.tx.nonce} />
+			</div>
+		);
+	}
+}
+
+export default withRouter(Tx);

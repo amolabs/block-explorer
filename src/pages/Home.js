@@ -1,7 +1,8 @@
+// vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import BlocksPreview from '../components/BlocksPreview';
 import TxsPreview from '../components/TxsPreview';
-import { getRecentBlocks, getRecentTxs, startSubscribe } from '../rpc';
+import { fetchRecentBlockHeaders, fetchRecentTxs, startSubscribe } from '../rpc';
 
 class Home extends Component {
 	state = {
@@ -9,21 +10,21 @@ class Home extends Component {
 		txs: [],
 	};
 
-	fetchBlock = () => {
-		getRecentBlocks(result => {
+	populateRecentBlocks = () => {
+		fetchRecentBlockHeaders(result => {
 			this.setState({ blocks: result.slice(0, 10) });
 		});
 	};
 
-	fetchTx = () => {
-		getRecentTxs(result => {
+	populateRecentTxs = () => {
+		fetchRecentTxs(result => {
 			this.setState({ txs: result });
 		});
 	};
 
 	onNewBlock = () => {
-		this.fetchBlock();
-		this.fetchTx();
+		this.populateRecentBlocks();
+		this.populateRecentTxs();
 	};
 	onWsError = e => {
 		console.error('web socket error: ', e);
@@ -31,8 +32,8 @@ class Home extends Component {
 	};
 
 	componentDidMount() {
-		this.fetchBlock();
-		this.fetchTx();
+		this.populateRecentBlocks();
+		this.populateRecentTxs();
 		startSubscribe(this.onNewBlock, this.onWsError);
 	}
 
