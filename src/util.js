@@ -25,3 +25,7 @@ export const KeyValueRow = ({ k, v }) => {
 export const accountLink = (address) => {
 	return ( <a href={"/account/" + address}>{address}</a>);
 };
+
+export const blockLink = (height) => {
+	return ( <a href={"/block/" + height}>{height}</a>);
+};

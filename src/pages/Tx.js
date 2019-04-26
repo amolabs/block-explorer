@@ -1,7 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { TextInput, KeyValueRow, accountLink } from '../util';
+import { TextInput, KeyValueRow, accountLink, blockLink } from '../util';
 import { fetchTx } from '../rpc';
 
 class Tx extends Component {
@@ -74,10 +74,15 @@ class TxDetail extends Component {
 			txHashAlt = ( <span>Input transaction hash to inspect &uarr;</span> );
 		}
 		const sender = accountLink(this.state.tx.sender);
+		const position = (
+			<span> index {this.state.tx.index} in
+				a block at height {blockLink(this.state.tx.height)}
+			</span>
+		);
 		return (
 			<div className="container">
 				<KeyValueRow k="TxHash" v={txHashAlt} />
-				<KeyValueRow k="In chain" v={'index ' + this.state.tx.index + ' in a block at height ' + this.state.tx.height} />
+				<KeyValueRow k="Position" v={position} />
 				<KeyValueRow k="Sender" v={sender} />
 				<KeyValueRow k="Type" v={this.state.tx.type} />
 				<KeyValueRow k="Nonce" v={this.state.tx.nonce} />
