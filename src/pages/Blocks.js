@@ -1,7 +1,7 @@
+// vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { getBlocks, getLastHeight } from '../rpc';
-import moment from 'moment';
+import { fetchBlockMetas, fetchLastHeight } from '../rpc';
 import PageNav from '../components/PageNav';
 import queryString from 'query-string';
 
@@ -13,17 +13,17 @@ class Blocks extends Component {
 		blocks: [],
 	};
 
-	getPageQuery = () => {
+	getCurrentPage = () => {
 		const pageQuery = queryString.parse(this.props.location.search).p;
 		if (pageQuery) return parseInt(pageQuery);
 		else return 1;
 	};
 
-	fetchBlocks = () => {
-		const page = this.getPageQuery();
+	populateBlocks = () => {
+		const page = this.getCurrentPage();
 
-		getLastHeight(lastHeight => {
-			getBlocks(
+		fetchLastHeight(lastHeight => {
+			fetchBlockMetas(
 				lastHeight - (page - 1) * blocksPerPage,
 				blocksPerPage,
 				result => {
@@ -37,12 +37,12 @@ class Blocks extends Component {
 	};
 
 	componentDidMount() {
-		this.fetchBlocks();
+		this.populateBlocks();
 	}
 
 	componentDidUpdate(prevProps) {
 		if (prevProps.location.search !== this.props.location.search)
-			this.fetchBlocks();
+			this.populateBlocks();
 	}
 
 	render() {
@@ -66,7 +66,7 @@ class Blocks extends Component {
 					baseURL={'/blocks'}
 					totalItem={this.state.lastHeight}
 					itemPerPage={blocksPerPage}
-					currentPage={this.getPageQuery()}
+					currentPage={this.getCurrentPage()}
 				/>
 			</div>
 		);
@@ -89,7 +89,7 @@ const BlockTableHeader = () => {
 				<HeaderItem name="Hash" col={4} />
 				<HeaderItem name="Proposer" col={4} />
 				<HeaderItem name="Tx" col={1} />
-				<HeaderItem name="Age" col={2} />
+				<HeaderItem name="Time" col={2} />
 			</tr>
 		</thead>
 	);
@@ -105,7 +105,7 @@ const BlockTableItem = ({ block, onClick }) => {
 			<RowItem content={block.hash} col={4} />
 			<RowItem content={block.proposer} col={4} />
 			<RowItem content={block.numTx} col={1} />
-			<RowItem content={moment(block.timestamp).fromNow(true)} col={2} />
+			<RowItem content={block.timestamp} col={2} />
 		</tr>
 	);
 };

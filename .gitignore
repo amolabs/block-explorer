@@ -5,6 +5,10 @@
 
 # IDE
 .idea/
+# vim
+.*.sw*
+tags
+TAGS
 
 # code style
 .prettierrc

@@ -1,3 +1,4 @@
+// vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 
 import '../styles/styles.css';
@@ -7,6 +8,7 @@ class NavBar extends Component {
 		return (
 			<nav className="navbar navbar-expand-lg navbar-light bg-light mb-4">
 				<NavBrand />
+				<NavBadge />
 				<button
 					className="navbar-toggler"
 					type="button"
@@ -16,7 +18,6 @@ class NavBar extends Component {
 					<span className="navbar-toggler-icon" />
 				</button>
 				<div className="collapse navbar-collapse flex-md-column">
-					<NavSearchBar />
 					<NavMenu pathName={this.props.location.pathname} />
 				</div>
 			</nav>
@@ -28,31 +29,19 @@ const NavBrand = () => {
 	return (
 		<Link to="/" className="navbar-brand">
 			<img
-				src={process.env.PUBLIC_URL + '/main.png'}
+				src={process.env.PUBLIC_URL + '/amo.png'}
 				width={30}
 				alt={'AMO'}
 			/>
-			<h3 className="navbar-brand-name">AMO Block Explorer</h3>
+			<h3 className="navbar-brand-name">AMO Blockchain Explorer</h3>
 		</Link>
 	);
 };
 
-const NavSearchBar = () => {
+const NavBadge = () => {
+	// TODO: use global variable
 	return (
-		<form className="form-inline ml-auto">
-			<div className="input-group">
-				<input
-					type="text"
-					className="form-control border-dark"
-					placeholder="Search"
-				/>
-				<div className="input-group-append">
-					<button className="btn btn-outline-secondary" type="button">
-						<i className="fa fa-search" />
-					</button>
-				</div>
-			</div>
-		</form>
+		<span className="navbar-badge">testnet</span>
 	);
 };
 
@@ -66,9 +55,9 @@ const NavMenu = ({ pathName }) => {
 				active={pathName === '/blocks'}
 			/>
 			<NavItem
-				name={'Query'}
-				link={'/query'}
-				active={pathName === '/query'}
+				name={'Account'}
+				link={'/account'}
+				active={pathName === '/account'}
 			/>
 		</ul>
 	);

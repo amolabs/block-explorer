@@ -1,50 +1,117 @@
+// vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
-import { getBlockByHeight } from '../rpc';
+import { withRouter } from 'react-router-dom';
+import { fetchBlockHeader } from '../rpc';
 import moment from 'moment';
 
 class Block extends Component {
 	state = {
-		block: {
-			chain: null,
-			hash: null,
-			height: null,
-			proposer: null,
-			numTx: null,
-			timestamp: null,
-		},
-	};
-	fetchBlock = () => {
-		getBlockByHeight(this.props.match.params.blockHeight, result => {
-			this.setState({ block: result });
-		});
+		heightInput: this.props.match.params.height,
+		heightActive: this.props.match.params.height,
 	};
 
-	componentDidMount() {
-		this.fetchBlock();
+	componentDidUpdate(prevProps) {
+		if (this.props.match.params.height !== prevProps.match.params.height) {
+			const height = this.props.match.params.height;
+			this.setState({ heightInput: height, heightActive: height });
+		}
+	}
+
+	handleChange = (e) => {
+		this.setState({ heightInput: e.target.value });
+	}
+
+	handleSubmit = (e) => {
+		e.preventDefault();
+		if (this.state.heightInput) {
+			this.setState({ heightActive: this.state.heightInput });
+			this.props.history.push('/block/'+this.state.heightInput);
+		}
 	}
 
 	render() {
 		return (
 			<div className="container">
-				<BlockInfo name="Chain-ID" content={this.state.block.chain} />
-				<BlockInfo name="Hash" content={this.state.block.hash} />
-				<BlockInfo name="Height" content={this.state.block.height} />
-				<BlockInfo name="Proposer" content={this.state.block.proposer} />
-				<BlockInfo name="NumTx" content={this.state.block.numTx} />
-				<BlockInfo
-					name="Timestamp"
-					content={moment(this.state.block.timestamp).format()}
-				/>
+				<TextInput desc="Height" name="height"
+					value={this.state.heightInput}
+					onChange={this.handleChange}
+					onSubmit={this.handleSubmit}/>
+				<BlockDetail height={this.state.heightActive}/>
 			</div>
 		);
 	}
 }
-const BlockInfo = ({ name, content }) => {
+
+class BlockDetail extends Component {
+	state = {
+		header: {
+			height: null,
+			chain: null,
+			hash: null,
+			proposer: null,
+			numTx: null,
+			time: null,
+		}
+		// TODO: txs
+	};
+
+	componentDidMount() {
+		this.updateHeader();
+	}
+
+	componentDidUpdate(prevProps) {
+		if (this.props.height !== prevProps.height) {
+			this.updateHeader();
+		}
+	}
+
+	updateHeader = () => {
+		if (this.props.height) {
+			fetchBlockHeader(this.props.height,
+				result => {
+					this.setState({ header: result });
+				}
+			);
+		}
+	};
+
+	render() {
+		var heightAlt = this.props.height;
+		if (!heightAlt) {
+			heightAlt = ( <span>Input block height to inspect &uarr;</span> );
+		}
+		return (
+			<div className="container">
+				<KeyValueRow k="Height" v={heightAlt} />
+				<KeyValueRow k="Chain-ID" v={this.state.header.chain}/>
+				<KeyValueRow k="Hash" v={this.state.header.hash}/>
+				<KeyValueRow k="Proposer" v={this.state.header.proposer}/>
+				<KeyValueRow k="NumTx" v={this.state.header.numTx}/>
+				<KeyValueRow k="Time" v={this.state.header.timestamp}/>
+			</div>
+		);
+	}
+}
+
+const TextInput = ({desc, name, value, onChange, onSubmit}) => {
 	return (
-		<p>
-			{name} : {content}
-		</p>
+		<div className="container">
+			<form className="d-flex flex-column mt-3" onSubmit={onSubmit}>
+				<div className="input-group mb-3">
+					<span className="input-group-text" id="basic-addon1">{desc}</span>
+					<input type="text" className="form-control"
+						name={name} value={value} onChange={onChange}/>
+					<button type="submit" className="btn btn-secondary ml-auto">
+						Query
+					</button>
+				</div>
+			</form>
+		</div>
 	);
 };
 
-export default Block;
+const KeyValueRow = ({ k, v }) => {
+	return ( <p> {k} : {v} </p> );
+};
+
+export default withRouter(Block);
