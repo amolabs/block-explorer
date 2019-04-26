@@ -1,6 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import { TextInput, KeyValueRow } from '../util';
 import { fetchBalance, fetchStake } from '../rpc';
 
 class Account extends Component {
@@ -110,26 +111,5 @@ class Stake extends Component {
 		return ( <KeyValueRow k="Stake" v={desc}/> );
 	}
 }
-
-const TextInput = ({desc, name, value, onChange, onSubmit}) => {
-	return (
-		<div className="container">
-			<form className="d-flex flex-column mt-3" onSubmit={onSubmit}>
-				<div className="input-group mb-3">
-					<span className="input-group-text" id="basic-addon1">{desc}</span>
-					<input type="text" className="form-control"
-						name={name} value={value} onChange={onChange}/>
-					<button type="submit" className="btn btn-secondary ml-auto">
-						Query
-					</button>
-				</div>
-			</form>
-		</div>
-	);
-};
-
-const KeyValueRow = ({ k, v }) => {
-	return ( <p> {k} : {v} </p> );
-};
 
 export default withRouter(Account);
