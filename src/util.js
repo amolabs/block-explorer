@@ -22,14 +22,18 @@ export const KeyValueRow = ({ k, v }) => {
 	return ( <p> {k} : {v} </p> );
 };
 
-export const accountLink = (address) => {
-	return ( <a href={"/account/" + address}>{address}</a>);
-};
-
 export const blockLink = (height) => {
 	return ( <a href={"/block/" + height}>{height}</a>);
 };
 
 export const txLink = (hash) => {
 	return ( <a href={"/tx/" + hash}>{hash}</a>);
+};
+
+export const accountLink = (address) => {
+	return ( <a href={"/account/" + address}>{address}</a>);
+};
+
+export const validatorLink = (address) => {
+	return ( <a href={"/validator/" + address}>{address}</a>);
 };

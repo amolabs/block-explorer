@@ -1,7 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { TextInput, KeyValueRow, accountLink, txLink } from '../util';
+import { TextInput, KeyValueRow, accountLink, txLink, validatorLink } from '../util';
 import { fetchBlock } from '../rpc';
 
 class Block extends Component {
@@ -81,12 +81,12 @@ class BlockDetail extends Component {
 			heightAlt = ( <span>Input block height to inspect &uarr;</span> );
 		}
 		// TODO: use validatorLink
-		const proposer = accountLink(this.state.block.proposer);
+		const validator = validatorLink(this.state.block.proposer);
 		return (
 			<div className="container">
 				<KeyValueRow k="Height" v={heightAlt} />
 				<KeyValueRow k="Chain-ID" v={this.state.block.chain}/>
-				<KeyValueRow k="Proposer" v={proposer}/>
+				<KeyValueRow k="Proposer" v={validator}/>
 				<KeyValueRow k="Time" v={this.state.block.timestamp}/>
 				<KeyValueRow k="NumTx" v={this.state.block.numTx}/>
 				<TxBriefList txs={this.state.block.txs}/>

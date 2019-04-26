@@ -55,9 +55,19 @@ const NavMenu = ({ pathName }) => {
 				active={pathName === '/blocks'}
 			/>
 			<NavItem
+				name={'Tx'}
+				link={'/tx'}
+				active={pathName === '/tx'}
+			/>
+			<NavItem
 				name={'Account'}
 				link={'/account'}
 				active={pathName === '/account'}
+			/>
+			<NavItem
+				name={'Validator'}
+				link={'/validator'}
+				active={pathName === '/validator'}
 			/>
 		</ul>
 	);
