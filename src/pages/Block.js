@@ -1,8 +1,8 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { TextInput, KeyValueRow, accountLink } from '../util';
-import { fetchBlockHeader } from '../rpc';
+import { TextInput, KeyValueRow, accountLink, txLink } from '../util';
+import { fetchBlock } from '../rpc';
 
 class Block extends Component {
 	state = {
@@ -44,32 +44,32 @@ class Block extends Component {
 
 class BlockDetail extends Component {
 	state = {
-		header: {
+		block: {
 			height: null,
 			chain: null,
 			hash: null,
 			proposer: null,
 			numTx: null,
 			time: null,
+			txs: null,
 		}
-		// TODO: txs
 	};
 
 	componentDidMount() {
-		this.updateHeader();
+		this.updateBlock();
 	}
 
 	componentDidUpdate(prevProps) {
 		if (this.props.height !== prevProps.height) {
-			this.updateHeader();
+			this.updateBlock();
 		}
 	}
 
-	updateHeader = () => {
+	updateBlock = () => {
 		if (this.props.height) {
-			fetchBlockHeader(this.props.height,
+			fetchBlock(this.props.height,
 				result => {
-					this.setState({ header: result });
+					this.setState({ block: result });
 				}
 			);
 		}
@@ -81,18 +81,36 @@ class BlockDetail extends Component {
 			heightAlt = ( <span>Input block height to inspect &uarr;</span> );
 		}
 		// TODO: use validatorLink
-		const proposer = accountLink(this.state.header.proposer);
+		const proposer = accountLink(this.state.block.proposer);
 		return (
 			<div className="container">
 				<KeyValueRow k="Height" v={heightAlt} />
-				<KeyValueRow k="Chain-ID" v={this.state.header.chain}/>
-				<KeyValueRow k="Hash" v={this.state.header.hash}/>
+				<KeyValueRow k="Chain-ID" v={this.state.block.chain}/>
 				<KeyValueRow k="Proposer" v={proposer}/>
-				<KeyValueRow k="NumTx" v={this.state.header.numTx}/>
-				<KeyValueRow k="Time" v={this.state.header.timestamp}/>
+				<KeyValueRow k="Time" v={this.state.block.timestamp}/>
+				<KeyValueRow k="NumTx" v={this.state.block.numTx}/>
+				<TxBriefList txs={this.state.block.txs}/>
 			</div>
 		);
 	}
 }
+
+const TxBriefList = ({txs}) => {
+	if (!txs) txs = [];
+	return (
+		<ul>
+			{ txs.map((tx) => {
+				return (<TxBriefItem key={tx.hash} tx={tx}/>);
+			}) }
+		</ul>
+	);
+};
+
+const TxBriefItem = ({tx}) => {
+	return (
+		<li key={tx.hash}>TxHash: {txLink(tx.hash)}<br/>
+			Sender: {accountLink(tx.sender)}, Type: {tx.type}</li>
+	);
+};
 
 export default withRouter(Block);

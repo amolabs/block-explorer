@@ -1,5 +1,5 @@
 // vim: set noexpandtab ts=2 sw=2 :
-import React, { Component } from 'react';
+import React from 'react';
 
 export const TextInput = ({desc, name, value, onChange, onSubmit}) => {
 	return (
@@ -28,4 +28,8 @@ export const accountLink = (address) => {
 
 export const blockLink = (height) => {
 	return ( <a href={"/block/" + height}>{height}</a>);
+};
+
+export const txLink = (hash) => {
+	return ( <a href={"/tx/" + hash}>{hash}</a>);
 };

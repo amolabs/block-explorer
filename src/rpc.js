@@ -42,11 +42,28 @@ export const startSubscribe = (onNewBlock, onError) => {
 const refineBlockMeta = meta => {
 	return {
 		chain: meta.header.chain_id,
-		hash: meta.block_id.hash,
 		height: meta.header.height,
 		proposer: meta.header.proposer_address,
 		numTx: meta.header.num_txs,
 		timestamp: meta.header.time,
+	};
+};
+
+const formatBlock = blk => {
+	if (!blk.data.txs) {
+		blk.data.txs = [];
+	}
+	return {
+		chain: blk.header.chain_id,
+		height: blk.header.height,
+		proposer: blk.header.proposer_address,
+		numTx: blk.header.num_txs,
+		timestamp: blk.header.time,
+		txs: blk.data.txs.map(a => {
+			var tx = JSON.parse(atob(a));
+			tx.hash = sha256(atob(a));
+			return tx;
+		}),
 	};
 };
 
@@ -62,13 +79,13 @@ export const fetchLastHeight = callback => {
 	});
 };
 
-export const fetchBlockHeader = (height, callback) => {
+export const fetchBlock = (height, callback) => {
 	axios.get(`${curlURL}/block?height=${height}`).then(
 		res => {
 			if ('error' in res.data) {
 				callback({});
 			} else {
-				callback(refineBlockMeta(res.data.result.block_meta));
+				callback(formatBlock(res.data.result.block));
 			}
 		}
 	);
