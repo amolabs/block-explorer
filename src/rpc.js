@@ -39,9 +39,10 @@ export const startSubscribe = (onNewBlock, onError) => {
 
 /* block related rpc */
 
-const refineBlockMeta = meta => {
+const formatBlockHeader = meta => {
 	return {
 		chain: meta.header.chain_id,
+		hash: meta.block_id.hash,
 		height: meta.header.height,
 		proposer: meta.header.proposer_address,
 		numTx: meta.header.num_txs,
@@ -69,7 +70,7 @@ const formatBlock = blk => {
 
 export const fetchLastBlock = callback => {
 	axios.get(`${curlURL}/block`).then(res => {
-		callback(refineBlockMeta(res.data.result.block_meta));
+		callback(formatBlockHeader(res.data.result.block_meta));
 	});
 };
 
@@ -100,18 +101,18 @@ export const fetchBlockMetas = (maxHeight, count, callback) => {
 		.then(res => {
 			callback(
 				res.data.result.block_metas.map(meta => {
-					return refineBlockMeta(meta);
+					return formatBlockHeader(meta);
 				})
 			);
 		});
 };
 
-export const fetchRecentBlockMetas = callback => {
+export const fetchRecentBlockHeaders = callback => {
 	// will retrieve most recent 20 block headers
 	axios.get(`${curlURL}/blockchain`).then(res => {
 		callback(
 			res.data.result.block_metas.map(meta => {
-				return refineBlockMeta(meta);
+				return formatBlockHeader(meta);
 			})
 		);
 	});
@@ -157,7 +158,7 @@ export const getTx = (hash, callback) => {
 };
 
 export const fetchRecentTxs = callback => {
-	fetchRecentBlockMetas(blocks => {
+	fetchRecentBlockHeaders(blocks => {
 		const promises = blocks
 			.filter(b => b.numTx > 0)
 			.map(b => axios.get(`${curlURL}/block?height=${b.height}`));

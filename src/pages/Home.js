@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import BlocksPreview from '../components/BlocksPreview';
 import TxsPreview from '../components/TxsPreview';
-import { fetchRecentBlockMetas, fetchRecentTxs, startSubscribe } from '../rpc';
+import { fetchRecentBlockHeaders, fetchRecentTxs, startSubscribe } from '../rpc';
 
 class Home extends Component {
 	state = {
@@ -11,7 +11,7 @@ class Home extends Component {
 	};
 
 	populateRecentBlocks = () => {
-		fetchRecentBlockMetas(result => {
+		fetchRecentBlockHeaders(result => {
 			this.setState({ blocks: result.slice(0, 10) });
 		});
 	};
