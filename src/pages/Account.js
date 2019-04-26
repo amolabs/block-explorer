@@ -58,7 +58,7 @@ const AccountDetail = ({address}) => {
 };
 
 class Balance extends Component {
-	state = { balance: 0 };
+	state = { balance: "loading..." };
 
 	componentDidMount() {
 		this.updateBalance();
@@ -75,6 +75,8 @@ class Balance extends Component {
 			fetchBalance(this.props.address,
 				result => { this.setState({ balance: result }); }
 			);
+		} else {
+			this.setState({ balance: null });
 		}
 	};
 
@@ -84,7 +86,7 @@ class Balance extends Component {
 }
 
 class Stake extends Component {
-	state = { stake: { amount: 0, validator: null } };
+	state = { stake: { amount: "loading...", validator: null } };
 
 	componentDidMount() {
 		this.updateStake();
@@ -101,13 +103,15 @@ class Stake extends Component {
 			fetchStake(this.props.address,
 				result => { this.setState({ stake: result }); }
 			);
+		} else {
+			this.setState({ stake: { amount: null } });
 		}
 	};
 
 	render() {
 		const stake = this.state.stake;
 		const desc = stake.amount
-			+ (stake.amount ? (' for validator ' + stake.validator) : '');
+			+ (stake.validator ? (' for validator ' + stake.validator) : '');
 		return ( <KeyValueRow k="Stake" v={desc}/> );
 	}
 }

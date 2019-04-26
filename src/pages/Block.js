@@ -46,12 +46,12 @@ class BlockDetail extends Component {
 	state = {
 		block: {
 			height: null,
-			chain: null,
-			hash: null,
-			proposer: null,
-			numTx: null,
-			time: null,
-			txs: null,
+			chain: "loading...",
+			hash: "loading...",
+			proposer: "loading...",
+			numTx: "loading...",
+			timestamp: "loading...",
+			txs: [],
 		}
 	};
 
@@ -72,6 +72,8 @@ class BlockDetail extends Component {
 					this.setState({ block: result });
 				}
 			);
+		} else {
+			this.setState({ block: {} });
 		}
 	};
 

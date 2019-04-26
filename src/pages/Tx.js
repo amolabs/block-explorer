@@ -45,6 +45,12 @@ class Tx extends Component {
 class TxDetail extends Component {
 	state = {
 		tx: {
+			txHash: "loading...",
+			index: "loading...",
+			height: "loading...",
+			sender: "loading...",
+			type: "loading...",
+			nonce: "loading...",
 		}
 	};
 
@@ -65,6 +71,8 @@ class TxDetail extends Component {
 					this.setState({ tx: result });
 				}
 			);
+		} else {
+			this.setState({ tx: {} });
 		}
 	};
 

@@ -1,5 +1,6 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export const TextInput = ({desc, name, value, onChange, onSubmit}) => {
 	return (
@@ -23,17 +24,17 @@ export const KeyValueRow = ({ k, v }) => {
 };
 
 export const blockLink = (height) => {
-	return ( <a href={"/block/" + height}>{height}</a>);
+	return ( <Link to={"/block/" + height}>{height}</Link>);
 };
 
 export const txLink = (hash) => {
-	return ( <a href={"/tx/" + hash}>{hash}</a>);
+	return ( <Link to={"/tx/" + hash}>{hash}</Link>);
 };
 
-export const accountLink = (address) => {
-	return ( <a href={"/account/" + address}>{address}</a>);
+export const accountLink = (address, history) => {
+	return ( <Link to={"/account/" + address}>{address}</Link> );
 };
 
 export const validatorLink = (address) => {
-	return ( <a href={"/validator/" + address}>{address}</a>);
+	return ( <Link to={"/validator/" + address}>{address}</Link>);
 };
