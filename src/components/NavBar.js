@@ -48,32 +48,39 @@ const NavBadge = () => {
 const NavMenu = ({ pathName }) => {
 	return (
 		<ul className="navbar-nav ml-auto small mb-2 mb-md-0">
-			<NavItem name={'Home'} link={'/'} active={pathName === '/'} />
+			<NavItem name={'Home'} link={'/'} curr={pathName} />
 			<NavItem
 				name={'Blocks'}
 				link={'/blocks'}
-				active={pathName === '/blocks'}
+				curr={pathName}
+			/>
+			<NavItem
+				name={'Block'}
+				link={'/block'}
+				curr={pathName}
 			/>
 			<NavItem
 				name={'Tx'}
 				link={'/tx'}
-				active={pathName === '/tx'}
+				curr={pathName}
 			/>
 			<NavItem
 				name={'Account'}
 				link={'/account'}
-				active={pathName === '/account'}
+				curr={pathName}
 			/>
 			<NavItem
 				name={'Validator'}
 				link={'/validator'}
-				active={pathName === '/validator'}
+				curr={pathName}
 			/>
 		</ul>
 	);
 };
 
-const NavItem = ({ name, link, active }) => {
+const NavItem = ({ name, link, curr }) => {
+	var patt = new RegExp(`^${link}(/.*)?$`);
+	const active = patt.test(curr);
 	return (
 		<li className={'nav-item' + (active ? ' active' : '')}>
 			<Link className="nav-link" to={link}>
