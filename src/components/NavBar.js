@@ -1,8 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
-
-import '../styles/styles.css';
 import { Link, withRouter } from 'react-router-dom';
+
 class NavBar extends Component {
 	render() {
 		return (
