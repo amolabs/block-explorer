@@ -1,8 +1,9 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import { TxBriefList } from '../components/Tx';
 import { TextInput, KeyValueRow } from '../util';
-import { fetchBalance, fetchStake } from '../rpc';
+import { fetchBalance, fetchStake, fetchAccountTxs } from '../rpc';
 
 class Account extends Component {
 	state = {
@@ -53,6 +54,7 @@ const AccountDetail = ({address}) => {
 			<KeyValueRow k="Address" v={addressAlt} />
 			<Balance address={address}/>
 			<Stake address={address}/>
+			<Txs address={address}/>
 		</div>
 	);
 };
@@ -113,6 +115,39 @@ class Stake extends Component {
 		const desc = stake.amount
 			+ (stake.validator ? (' for validator ' + stake.validator) : '');
 		return ( <KeyValueRow k="Stake" v={desc}/> );
+	}
+}
+
+class Txs extends Component {
+	state = { txs: [] };
+
+	componentDidMount() {
+		this.updateTxs();
+	}
+
+	componentDidUpdate(prevProps) {
+		if (this.props.address !== prevProps.address) {
+			this.updateTxs();
+		}
+	}
+
+	updateTxs = () => {
+		if (this.props.address) {
+			fetchAccountTxs(this.props.address,
+				result => { this.setState({ txs: result }); }
+			);
+		} else {
+			this.setState({ txs: [] });
+		}
+	};
+
+	// TODO: pagination
+	render() {
+		return (
+			<div>Tx list sent from this account ({this.state.txs.length} transactions):
+				<TxBriefList txs={this.state.txs}/>
+			</div>
+		);
 	}
 }
 

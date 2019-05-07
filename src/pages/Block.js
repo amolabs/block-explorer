@@ -1,8 +1,8 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { TxBody } from '../components/Tx';
-import { TextInput, KeyValueRow, accountLink, txLink, validatorLink } from '../util';
+import { TxBriefList } from '../components/Tx';
+import { TextInput, KeyValueRow, validatorLink } from '../util';
 import { fetchBlock } from '../rpc';
 
 class Block extends Component {
@@ -97,27 +97,5 @@ class BlockDetail extends Component {
 		);
 	}
 }
-
-const TxBriefList = ({txs}) => {
-	if (!txs) txs = [];
-	return (
-		<ul>
-			{ txs.map((tx) => {
-				return (<TxBriefItem key={tx.hash} tx={tx}/>);
-			}) }
-		</ul>
-	);
-};
-
-const TxBriefItem = ({tx}) => {
-	return (
-		<li key={tx.hash}>
-			<div>TxHash: {txLink(tx.hash)}</div>
-			<div>Sender: {accountLink(tx.sender)}</div>
-			<div>Type: {tx.type}</div>
-			<TxBody tx={tx} />
-		</li>
-	);
-};
 
 export default withRouter(Block);

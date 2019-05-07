@@ -215,6 +215,18 @@ function parseStake(result) {
 	return stake
 }
 
+// TODO: pagination
+export const fetchAccountTxs = (address, callback) => {
+	axios.get(`${curlURL}/tx_search?query="tx.sender='${address}'"`).then(
+		res => {
+			callback(res.data.result.txs.map(tx => {
+				tx.tx = JSON.parse(atob(tx.tx))
+				return refineTxMeta(tx);
+			}));
+		}
+	);
+};
+
 function bytes2hex(bytes) {
 	return bytes.map(b => {return b.toString(16);}).join('');
 }
