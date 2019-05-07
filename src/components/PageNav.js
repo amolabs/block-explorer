@@ -1,3 +1,4 @@
+// vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 

@@ -1,6 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import { TxBody } from '../components/Tx';
 import { TextInput, KeyValueRow, accountLink, blockLink } from '../util';
 import { fetchTx } from '../rpc';
 
@@ -92,8 +93,9 @@ class TxDetail extends Component {
 				<KeyValueRow k="TxHash" v={txHashAlt} />
 				<KeyValueRow k="Position" v={position} />
 				<KeyValueRow k="Sender" v={sender} />
-				<KeyValueRow k="Type" v={this.state.tx.type} />
 				<KeyValueRow k="Nonce" v={this.state.tx.nonce} />
+				<KeyValueRow k="Type" v={this.state.tx.type} />
+				<TxBody tx={this.state.tx} />
 			</div>
 		);
 	}

@@ -31,10 +31,15 @@ export const txLink = (hash) => {
 	return ( <Link to={"/tx/" + hash}>{hash}</Link>);
 };
 
-export const accountLink = (address, history) => {
+export const accountLink = (address) => {
 	return ( <Link to={"/account/" + address}>{address}</Link> );
 };
 
 export const validatorLink = (address) => {
 	return ( <Link to={"/validator/" + address}>{address}</Link>);
 };
+
+export const parcelLink = (parcelID) => {
+	return ( <Link to={"/parcel/" + parcelID}>{parcelID}</Link>);
+};
+

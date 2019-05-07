@@ -50,6 +50,18 @@ const formatBlockHeader = meta => {
 	};
 };
 
+export const fetchLastBlock = callback => {
+	axios.get(`${curlURL}/block`).then(res => {
+		callback(formatBlockHeader(res.data.result.block_meta));
+	});
+};
+
+export const fetchLastHeight = callback => {
+	fetchLastBlock(result => {
+		callback(parseInt(result.height));
+	});
+};
+
 const formatBlock = blk => {
 	if (!blk.data.txs) {
 		blk.data.txs = [];
@@ -66,18 +78,6 @@ const formatBlock = blk => {
 			return tx;
 		}),
 	};
-};
-
-export const fetchLastBlock = callback => {
-	axios.get(`${curlURL}/block`).then(res => {
-		callback(formatBlockHeader(res.data.result.block_meta));
-	});
-};
-
-export const fetchLastHeight = callback => {
-	fetchLastBlock(result => {
-		callback(parseInt(result.height));
-	});
 };
 
 export const fetchBlock = (height, callback) => {
@@ -128,6 +128,7 @@ const refineTxMeta = meta => {
 		sender: meta.tx.sender,
 		type: meta.tx.type,
 		nonce: meta.tx.nonce,
+		param: meta.tx.param,
 	};
 };
 

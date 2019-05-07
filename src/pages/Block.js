@@ -1,6 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import { TxBody } from '../components/Tx';
 import { TextInput, KeyValueRow, accountLink, txLink, validatorLink } from '../util';
 import { fetchBlock } from '../rpc';
 
@@ -110,8 +111,12 @@ const TxBriefList = ({txs}) => {
 
 const TxBriefItem = ({tx}) => {
 	return (
-		<li key={tx.hash}>TxHash: {txLink(tx.hash)}<br/>
-			Sender: {accountLink(tx.sender)}, Type: {tx.type}</li>
+		<li key={tx.hash}>
+			<div>TxHash: {txLink(tx.hash)}</div>
+			<div>Sender: {accountLink(tx.sender)}</div>
+			<div>Type: {tx.type}</div>
+			<TxBody tx={tx} />
+		</li>
 	);
 };
 
