@@ -73,6 +73,11 @@ const NavMenu = ({ pathName }) => {
 				link={'/validator'}
 				curr={pathName}
 			/>
+			<NavItem
+				name={'Parcel'}
+				link={'/parcel'}
+				curr={pathName}
+			/>
 		</ul>
 	);
 };

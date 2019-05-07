@@ -88,13 +88,12 @@ const TxRequest = ({txBody}) => {
 	);
 }
 
-// TODO: use lower case json
 const TxGrant = ({txBody}) => {
 	return (
 		<div>
-			<div>Parcel: {parcelLink(txBody.Target)}</div>
-			<div>Grantee: {accountLink(txBody.Grantee)}</div>
-			<div>Key Custody: {txBody.Custody}</div>
+			<div>Parcel: {parcelLink(txBody.target)}</div>
+			<div>Grantee: {accountLink(txBody.grantee)}</div>
+			<div>Key Custody: {txBody.custody}</div>
 		</div>
 	);
 }

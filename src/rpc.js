@@ -201,7 +201,7 @@ function parseBalance(result) {
 export const fetchStake = (address, callback) => {
 	abciQuery('stake', address,
 		res => { callback(parseStake(res)); },
-		err => { callback(0); }
+		err => { callback(0); } // TODO: check this
 	);
 };
 
@@ -227,8 +227,25 @@ export const fetchAccountTxs = (address, callback) => {
 	);
 };
 
+export const fetchParcel = (id, callback) => {
+	abciQuery('parcel', id,
+		res => { callback(parseParcel(res)); },
+		err => { callback(0); } // TODO: check this
+	);
+};
+
+function parseParcel(result) {
+	var parsed = JSON.parse(atob(result));
+	if (!parsed) parsed = { owner: null, custody: [] };
+	const parcel = {
+		owner: parsed.owner,
+		custody: parsed.custody, // TODO: byte array
+	};
+	return parcel;
+}
+
 function bytes2hex(bytes) {
-	return bytes.map(b => {return b.toString(16);}).join('');
+	return bytes.map(b => {return ('0'+b.toString(16)).slice(-2);}).join('');
 }
 
 /* query related rpc */
