@@ -38,13 +38,14 @@ const TxsPreviewItem = ({ tx, onClick }) => {
 				<p className="col-2"><b>{tx.type}</b></p>
 				<p className="col-10"><font color="grey"><i>hash</i>: {tx.hash}</font></p>
 			</div>
-			<TxDetail name="sender" content={tx.sender} />
+			<TxDetail key="sender" name="sender" content={tx.sender} />
 			{Object.keys(tx.param).map(key => {
-				return <TxDetail name={key} content={tx.param[key]} />;
+				return <TxDetail key={key} name={key} content={tx.param[key]} />;
 			})}
 		</li>
 	);
 };
+
 const TxDetail = ({ name, content }) => {
 	return (
 		<div className="row tx-info">
