@@ -128,7 +128,7 @@ const refineTxMeta = meta => {
 		sender: meta.tx.sender,
 		type: meta.tx.type,
 		nonce: meta.tx.nonce,
-		param: meta.tx.param,
+		payload: meta.tx.payload,
 	};
 };
 

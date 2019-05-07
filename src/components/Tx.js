@@ -5,21 +5,21 @@ import { accountLink, txLink, parcelLink } from '../util';
 export const TxBody = ({tx}) => {
 	switch (tx.type) {
 		case 'transfer':
-			return (<TxTransfer txBody={tx.param} />);
+			return (<TxTransfer txBody={tx.payload} />);
 		case 'stake':
-			return (<TxStake txBody={tx.param} />);
+			return (<TxStake txBody={tx.payload} />);
 		case 'withdraw':
-			return (<TxWithdraw txBody={tx.param} />);
+			return (<TxWithdraw txBody={tx.payload} />);
 		case 'delegate':
-			return (<TxDelegate txBody={tx.param} />);
+			return (<TxDelegate txBody={tx.payload} />);
 		case 'retract':
-			return (<TxRetract txBody={tx.param} />);
+			return (<TxRetract txBody={tx.payload} />);
 		case 'register':
-			return (<TxRegister txBody={tx.param} />);
+			return (<TxRegister txBody={tx.payload} />);
 		case 'request':
-			return (<TxRequest txBody={tx.param} />);
+			return (<TxRequest txBody={tx.payload} />);
 		case 'grant':
-			return (<TxGrant txBody={tx.param} />);
+			return (<TxGrant txBody={tx.payload} />);
 		default:
 			return (<div>Unknown transaction type</div>);
 	}
