@@ -25,7 +25,7 @@ class Parcel extends Component {
 		e.preventDefault();
 		if (this.state.parcelIDInput) {
 			this.setState({ parcelIDActive: this.state.parcelIDInput });
-			this.props.history.push('/tx/'+this.state.parcelIDInput);
+			this.props.history.push('/parcel/'+this.state.parcelIDInput);
 		}
 	}
 
