@@ -10,7 +10,6 @@ import Tx from './pages/Tx';
 import Account from './pages/Account';
 import Validator from './pages/Validator';
 import Parcel from './pages/Parcel';
-import Query from './pages/Query';
 
 class App extends Component {
 	render() {
@@ -31,7 +30,6 @@ class App extends Component {
 						<Route exact path="/validator/:address" component={Validator} />
 						<Route exact path="/parcel" component={Parcel} />
 						<Route exact path="/parcel/:parcelID" component={Parcel} />
-						<Route exact path="/query" component={Query} />
 					</Switch>
 				</div>
 			</BrowserRouter>
