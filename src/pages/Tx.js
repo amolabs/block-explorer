@@ -7,37 +7,29 @@ import { fetchTx } from '../rpc';
 
 class Tx extends Component {
 	state = {
-		txHashInput: this.props.match.params.txHash,
-		txHashActive: this.props.match.params.txHash,
+		txHash: this.props.match.params.txHash,
 	};
 
 	componentDidUpdate(prevProps) {
 		if (this.props.match.params.txHash !== prevProps.match.params.txHash) {
 			const txHash = this.props.match.params.txHash;
-			this.setState({ txHashInput: txHash, txHashActive: txHash });
+			this.setState({ txHash: txHash });
 		}
 	}
 
-	handleChange = (e) => {
-		this.setState({ txHashInput: e.target.value });
-	}
-
-	handleSubmit = (e) => {
-		e.preventDefault();
-		if (this.state.txHashInput) {
-			this.setState({ txHashActive: this.state.txHashInput });
-			this.props.history.push('/tx/'+this.state.txHashInput);
-		}
+	updateTxHash = (txHash) => {
+		this.setState({ txHash: txHash });
+		this.props.history.push('/tx/'+txHash);
 	}
 
 	render() {
 		return (
 			<div className="container">
 				<TextInput desc="TxHash" name="txHash"
-					value={this.state.txHashInput}
-					onChange={this.handleChange}
-					onSubmit={this.handleSubmit}/>
-				<TxDetail txHash={this.state.txHashActive}/>
+					value={this.state.txHash}
+					button="Query"
+					onSubmit={this.updateTxHash}/>
+				<TxDetail txHash={this.state.txHash}/>
 			</div>
 		);
 	}

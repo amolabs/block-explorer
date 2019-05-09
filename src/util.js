@@ -1,23 +1,47 @@
 // vim: set noexpandtab ts=2 sw=2 :
-import React from 'react';
+import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
-export const TextInput = ({desc, name, value, onChange, onSubmit}) => {
-	return (
-		<div className="container">
-			<form className="d-flex flex-column mt-3" onSubmit={onSubmit}>
-				<div className="input-group mb-3">
-					<span className="input-group-text" id="basic-addon1">{desc}</span>
-					<input type="text" className="form-control"
-						name={name} value={value} onChange={onChange}/>
-					<button type="submit" className="btn btn-secondary ml-auto">
-						Query
-					</button>
-				</div>
-			</form>
-		</div>
-	);
-};
+export class TextInput extends Component {
+	state = {
+		value: this.props.value,
+	};
+
+	componentDidUpdate(prevProps) {
+		if (this.props.value !== prevProps.value) {
+			this.setState({ value: this.props.value });
+		}
+	}
+
+	handleChange = (e) => {
+		this.setState({ value: e.target.value });
+	};
+
+	handleSubmit = (e) => {
+		e.preventDefault();
+		this.props.onSubmit(this.state.value);
+	};
+
+	render() {
+		const desc = this.props.desc;
+		const name = this.props.name;
+		const button = this.props.button;
+		return (
+			<div className="container">
+				<form className="d-flex flex-column mt-3" onSubmit={this.handleSubmit}>
+					<div className="input-group mb-3">
+						<span className="input-group-text" id="basic-addon1">{desc}</span>
+						<input type="text" className="form-control"
+							name={name} value={this.state.value} onChange={this.handleChange}/>
+						<button type="submit" className="btn btn-secondary ml-auto">
+							{button}
+						</button>
+					</div>
+				</form>
+			</div>
+		);
+	}
+}
 
 export const KeyValueRow = ({ k, v }) => {
 	return ( <p> {k} : {v} </p> );

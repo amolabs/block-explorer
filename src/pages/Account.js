@@ -7,37 +7,29 @@ import { fetchBalance, fetchStake, fetchAccountTxs } from '../rpc';
 
 class Account extends Component {
 	state = {
-		addressInput: this.props.match.params.address,
-		addressActive: this.props.match.params.address,
+		address: this.props.match.params.address,
 	};
 
 	componentDidUpdate(prevProps) {
 		if (this.props.match.params.address !== prevProps.match.params.address) {
 			const address = this.props.match.params.address;
-			this.setState({ addressInput: address, addressActive: address });
+			this.setState({ address: address });
 		}
 	}
 
-	handleChange = (e) => {
-		this.setState({ addressInput: e.target.value });
-	}
-
-	handleSubmit = (e) => {
-		e.preventDefault();
-		if (this.state.addressInput) {
-			this.setState({ addressActive: this.state.addressInput });
-			this.props.history.push('/account/'+this.state.addressInput);
-		}
+	updateAddress = (address) => {
+		this.setState({ address: address });
+		this.props.history.push('/account/'+address);
 	}
 
 	render() {
 		return (
 			<div className="container">
 				<TextInput desc="Address" name="address"
-					value={this.state.addressInput}
-					onChange={this.handleChange}
-					onSubmit={this.handleSubmit}/>
-				<AccountDetail address={this.state.addressActive}/>
+					value={this.state.address}
+					button="Query"
+					onSubmit={this.updateAddress}/>
+				<AccountDetail address={this.state.address}/>
 			</div>
 		);
 	}

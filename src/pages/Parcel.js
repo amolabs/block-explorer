@@ -6,37 +6,29 @@ import { fetchParcel } from '../rpc';
 
 class Parcel extends Component {
 	state = {
-		parcelIDInput: this.props.match.params.parcelID,
-		parcelIDActive: this.props.match.params.parcelID,
+		parcelID: this.props.match.params.parcelID,
 	};
 
 	componentDidUpdate(prevProps) {
 		if (this.props.match.params.parcelID !== prevProps.match.params.parcelID) {
 			const parcelID = this.props.match.params.parcelID;
-			this.setState({ parcelIDInput: parcelID, parcelIDActive: parcelID });
+			this.setState({ parcelID: parcelID });
 		}
 	}
 
-	handleChange = (e) => {
-		this.setState({ parcelIDInput: e.target.value });
-	}
-
-	handleSubmit = (e) => {
-		e.preventDefault();
-		if (this.state.parcelIDInput) {
-			this.setState({ parcelIDActive: this.state.parcelIDInput });
-			this.props.history.push('/parcel/'+this.state.parcelIDInput);
-		}
+	updateParcelID = (id) => {
+		this.setState({ parcelID: id });
+		this.props.history.push('/parcel/'+id);
 	}
 
 	render() {
 		return (
 			<div className="container">
 				<TextInput desc="Parcel ID" name="parcelID"
-					value={this.state.parcelIDInput}
-					onChange={this.handleChange}
-					onSubmit={this.handleSubmit}/>
-				<ParcelDetail parcelID={this.state.parcelIDActive}/>
+					value={this.state.parcelID}
+					button="Query"
+					onSubmit={this.updateParcelID}/>
+				<ParcelDetail parcelID={this.state.parcelID}/>
 			</div>
 		);
 	}
