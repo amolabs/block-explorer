@@ -9,14 +9,15 @@ class Demo extends Component {
 		seller: { seed: null, address: null, ecKey: null, },
 		buyer: { seed: null, address: null, ecKey: null, },
 		parcel: { id: null, custody: null, extra: null },
+		action: null,
 	};
 
 	updateSeller = (seed) => {
-		this.setState({ seller: this.makeNewAccount(seed) });
+		this.setState({ action: 'seller', seller: this.makeNewAccount(seed) });
 	};
 
 	updateBuyer = (seed) => {
-		this.setState({ buyer: this.makeNewAccount(seed) });
+		this.setState({ action: 'buyer', buyer: this.makeNewAccount(seed) });
 	};
 
 	makeNewAccount = (seed) => {
@@ -73,6 +74,7 @@ class Demo extends Component {
 							onInputCustody={this.updateKeyCustody}
 							onInputExtra={this.updateExtra}
 						/>
+						<Trader state={this.state} />
 						<div className="container">
 							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
 							item</span> to edit. Seed input can be any string. Parcel ID and
@@ -81,7 +83,7 @@ class Demo extends Component {
 						</div>
 					</div>
 					<div className="col-md-6">
-						<ConsoleGuide state={this.state}/>
+						<ConsoleGuide state={this.state} />
 					</div>
 				</div>
 			</div>
@@ -167,19 +169,67 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 	);
 };
 
-const ConsoleGuide = ({state}) => {
-	var cmd = 'no command';
-	if (!state.seller || !state.seller.ecKey) {
-		console.log('seller =', state.seller);
-		cmd = 'amocli key generate demo1 --seed=demo1 --encrypt=false'
-	} else if (!state.parcel || !state.parcel.id || !state.parcel.custody) {
-		cmd = 'amocli tx register 11ef11ef 0f0f0f0f'
+const Trader = ({state}) => {
+	var msg;
+	var ready = false;
+	if (state
+		&& state.seller && state.seller.address
+		&& state.buyer && state.buyer.address
+		&& state.parcel && state.parcel.id
+	) {
+		ready = true;
+	}
+
+	if (ready) {
+		msg = "trader screen";
+	} else {
+		msg = "Please setup two demo accounts and parcel data.";
 	}
 
 	return (
 		<div className="container round-box">
-			Console command for your previous action(It's one line!):
+			<div>{msg}</div>
+			<div>
+				<input type="button" value="Register" disabled={!ready}/>
+				<input type="button" value="Request" disabled={!ready}/>
+				<input type="button" value="Grant" disabled={!ready}/>
+			</div>
+		</div>
+	);
+};
+
+const ConsoleGuide = ({state}) => {
+	var cmd;
+	var guide;
+	var seed;
+	var parcel;
+	switch (state.action) {
+		case 'seller':
+			seed = state.seller.seed;
+			cmd = 'amocli key generate '+seed +' --seed='+seed;
+			guide = (<span>This command will generate a new key in the local keyring, with username <b>{seed}</b> using "{seed}" for a seed string in the key generation algorithm. A username is just for identifying each key in the local keyring. In the meantime, a seed string is used a randomness seed for the key generation algorithm. So, if you use the same seed string you shall get the same key anywhere, any time.</span>);
+			break;
+		case 'buyer':
+			seed = state.buyer.seed;
+			cmd = 'amocli key generate '+seed+' --seed='+seed
+			guide = (<span>This command will generate a new key in the local keyring, with username <b>{seed}</b> using "{seed}" for a seed string in the key generation algorithm. A username is just for identifying each key in the local keyring. In the meantime, a seed string is used a randomness seed for the key generation algorithm. So, if you use the same seed string you shall get the same key anywhere, any time.</span>);
+			break;
+		case 'register':
+			parcel = state.parcel;
+			cmd = 'amocli tx register '+parcel.id+' '+parcel.custody;
+			guide = (<span>This command will register a new data parcel to the AMO blockchain, with parcel id <b>{parcel.id}</b> and <b>{parcel.custody}</b> as the owner's key custody.</span>);
+			break;
+		default:
+			cmd = 'no command';
+			guide = (<span></span>);
+			break;
+	}
+
+	return (
+		<div className="container round-box">
+			Console command for your recent action(It's one line!):
 			<pre className="block-code">{cmd}</pre>
+			{guide}
 		</div>
 	);
 }
