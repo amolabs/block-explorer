@@ -91,3 +91,41 @@
     text-overflow: ellipsis;
     text-align: center;
 }
+
+.round-box {
+	border-radius: .5em;
+	border: 1px lightgray solid;
+	padding-top: .5em;
+	padding-bottom: .5em;
+	margin-top: .5em;
+	margin-bottom: .5em;
+}
+
+.block-code {
+	display: block;
+	font-family: Monospace;
+	color: black;
+	border-radius: .5em;
+	border: 1px #e0e0e0 solid;
+	background-color: #e0e0e0;
+	padding: 1em;
+	font-size: 1.1em;
+	overflow: scroll;
+}
+
+.rie-inline {
+	display: inline-block;
+	padding: 0px;
+	border: dashed gray;
+	border-width: 0px 0px 1px 0px;
+}
+
+.indented-box {
+	display: inline-block;
+	margin-left: 1em;
+	padding-left: .2em;
+	padding-right: .2em;
+	width: 100%;
+	min-height: 3em;
+	border: 1px dashed gray;
+}

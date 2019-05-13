@@ -78,6 +78,11 @@ const NavMenu = ({ pathName }) => {
 				link={'/parcel'}
 				curr={pathName}
 			/>
+			<NavItem
+				name={'Demo'}
+				link={'/demo'}
+				curr={pathName}
+			/>
 		</ul>
 	);
 };

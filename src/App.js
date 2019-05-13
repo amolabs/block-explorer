@@ -10,6 +10,7 @@ import Tx from './pages/Tx';
 import Account from './pages/Account';
 import Validator from './pages/Validator';
 import Parcel from './pages/Parcel';
+import Demo from './pages/Demo';
 
 class App extends Component {
 	render() {
@@ -30,6 +31,7 @@ class App extends Component {
 						<Route exact path="/validator/:address" component={Validator} />
 						<Route exact path="/parcel" component={Parcel} />
 						<Route exact path="/parcel/:parcelID" component={Parcel} />
+						<Route exact path="/demo" component={Demo} />
 					</Switch>
 				</div>
 			</BrowserRouter>
