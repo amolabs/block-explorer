@@ -129,3 +129,7 @@
 	min-height: 3em;
 	border: 1px dashed gray;
 }
+
+.gray {
+	color: gray;
+}

@@ -56,6 +56,7 @@ class Demo extends Component {
 		return (
 			<div className="container">
 				<div className="container">Demo main. Some descriptions here.</div>
+				<StepGuide state={this.state} />
 				<div className="container row">
 					<div className="col-md-6">
 						<DemoAccount
@@ -97,7 +98,7 @@ const DemoAccount = ({heading, account, onInputSeed}) => {
 	}
 	return (
 		<div className="container round-box">
-			{heading}
+			<b>{heading}</b>
 			<div className="container">
 				Address: {
 					account.address?
@@ -108,7 +109,7 @@ const DemoAccount = ({heading, account, onInputSeed}) => {
 			<div className="container">
 				Seed:&nbsp;
 				<RIEInput
-					value={account.seed?account.seed:'input seed and press enter'}
+					value={account.seed?account.seed:'input seed string and press enter'}
 					propName="seed"
 					change={(prop) => {onInputSeed(prop.seed);}}
 					className="rie-inline"
@@ -127,7 +128,7 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 	}
 	return (
 		<div className="container round-box">
-			Data parcel
+			<b>Data parcel</b>
 			<div className="container">
 				{/*<div>Parcel ID(check): {parcel.id}</div>*/}
 				{/*<div>Key custody(check): {parcel.custody}</div>*/}
@@ -198,6 +199,29 @@ const Trader = ({state}) => {
 	);
 };
 
+const StepGuide = ({state}) => {
+	var msg;
+	if (!state.seller.address) {
+		msg = "Generate a seller account by setting a seed string. The generated key will not be shown in this screen, and stored in the browser's memory only. So, if you leave this screen the generated key shall be discarded. In order to use the same key in the future, you need to remember your seed strings.";
+	} else if (!state.buyer.address) {
+		msg = "Generate a buyer account by setting a seed string. The generated key will not be shown in this screen, and stored in the browser's memory only. So, if you leave this screen the generated key shall be discarded. In order to use the same key in the future, you need to remember your seed strings.";
+	} else if (!state.parcel.id) {
+		msg = "Enter data parcel ID as a hexadecimal string. A parcel ID is used to identify and merchadize any data item in AMO blockchain environment.";
+	} else if (!state.parcel.custody) {
+		msg = "Enter key custody information of this data parcel as a dexadecimal string. This custody is used to store owner's data encryption key.";
+	} else if (!state.parcel.extra) {
+		msg = "Enter some extra information of this data parcel. You may enter any string here.";
+	} else {
+		msg = "Now you need to acquire some AMO coins for actual data trading.";
+	}
+
+	return (
+		<div className="container" style={{minHeight:"4em",color:"blue"}} >
+			{msg}
+		</div>
+	);
+};
+
 const ConsoleGuide = ({state}) => {
 	var cmd;
 	var guide;
@@ -207,21 +231,21 @@ const ConsoleGuide = ({state}) => {
 		case 'seller':
 			seed = state.seller.seed;
 			cmd = 'amocli key generate '+seed +' --seed='+seed;
-			guide = (<span>This command will generate a new key in the local keyring, with username <b>{seed}</b> using "{seed}" for a seed string in the key generation algorithm. A username is just for identifying each key in the local keyring. In the meantime, a seed string is used a randomness seed for the key generation algorithm. So, if you use the same seed string you shall get the same key anywhere, any time.</span>);
+			guide = (<span className="gray">This command will generate a new key in the local keyring, with username <b>{seed}</b> using "{seed}" for a seed string in the key generation algorithm. A username is just for identifying each key in the local keyring. In the meantime, a seed string is used a randomness seed for the key generation algorithm. So, if you use the same seed string you shall get the same key anywhere, any time.</span>);
 			break;
 		case 'buyer':
 			seed = state.buyer.seed;
 			cmd = 'amocli key generate '+seed+' --seed='+seed
-			guide = (<span>This command will generate a new key in the local keyring, with username <b>{seed}</b> using "{seed}" for a seed string in the key generation algorithm. A username is just for identifying each key in the local keyring. In the meantime, a seed string is used a randomness seed for the key generation algorithm. So, if you use the same seed string you shall get the same key anywhere, any time.</span>);
+			guide = (<span className="gray">This command will generate a new key in the local keyring, with username <b>{seed}</b> using "{seed}" for a seed string in the key generation algorithm. A username is just for identifying each key in the local keyring. In the meantime, a seed string is used a randomness seed for the key generation algorithm. So, if you use the same seed string you shall get the same key anywhere, any time.</span>);
 			break;
 		case 'register':
 			parcel = state.parcel;
 			cmd = 'amocli tx register '+parcel.id+' '+parcel.custody;
-			guide = (<span>This command will register a new data parcel to the AMO blockchain, with parcel id <b>{parcel.id}</b> and <b>{parcel.custody}</b> as the owner's key custody.</span>);
+			guide = (<span className="gray">This command will register a new data parcel to the AMO blockchain, with parcel id <b>{parcel.id}</b> and <b>{parcel.custody}</b> as the owner's key custody.</span>);
 			break;
 		default:
 			cmd = 'no command';
-			guide = (<span></span>);
+			guide = (<span className="gray"></span>);
 			break;
 	}
 
