@@ -120,6 +120,10 @@
 	border-width: 0px 0px 1px 0px;
 }
 
+.trader button {
+	width: 5em;
+}
+
 .indented-box {
 	display: inline-block;
 	margin-left: 1em;

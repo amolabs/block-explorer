@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { ec as EC } from 'elliptic';
 import sha256 from 'sha256';
 import { RIEInput, RIETextArea } from 'riek';
+import { registerParcel } from '../rpc';
 
 class Demo extends Component {
 	state = {
@@ -11,6 +12,15 @@ class Demo extends Component {
 		parcel: { id: null, custody: null, extra: null },
 		action: null,
 	};
+
+	componentDidMount() {
+		if (this.state.seller.seed) {
+			this.updateSeller(this.state.seller.seed);
+		}
+		if (this.state.buyer.seed) {
+			this.updateBuyer(this.state.buyer.seed);
+		}
+	}
 
 	updateSeller = (seed) => {
 		this.setState({ action: 'seller', seller: this.makeNewAccount(seed) });
@@ -52,6 +62,21 @@ class Demo extends Component {
 		});
 	};
 
+	sendRegister = () => {
+		if (this.state.seller.ecKey) { // sanity check
+			registerParcel(
+				this.state.parcel,
+				this.state.seller,
+				(res) => {
+					this.setState({ action: 'register' });
+				},
+				(err) => {
+					alert('error = ' + err.message + ': ' + err.data);
+				}
+			);
+		}
+	};
+
 	render() {
 		return (
 			<div className="container">
@@ -75,7 +100,12 @@ class Demo extends Component {
 							onInputCustody={this.updateKeyCustody}
 							onInputExtra={this.updateExtra}
 						/>
-						<Trader state={this.state} />
+						<Trader
+							state={this.state}
+							onRegister={this.sendRegister}
+							onRequest={this.sendRequest}
+							onGrant={this.sendGrant}
+						/>
 						<div className="container">
 							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
 							item</span> to edit. Seed input can be any string. Parcel ID and
@@ -170,7 +200,7 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 	);
 };
 
-const Trader = ({state}) => {
+const Trader = ({state, onRegister, onRequest, onGrant}) => {
 	var msg;
 	var ready = false;
 	if (state
@@ -188,25 +218,34 @@ const Trader = ({state}) => {
 	}
 
 	return (
-		<div className="container round-box">
+		<div className="container round-box trader">
 			<div>{msg}</div>
 			<div>
 				<span className={!ready?"gray":""}>
-					Register a data pacel via the seller account:
+					<button type="button" disabled={!ready} onClick={onRegister}>
+						Register
+					</button>
+					&nbsp;
+					Seller: register a data pacel
 				</span>
-				<input type="button" value="Register" disabled={!ready}/>
 			</div>
 			<div>
 				<span className={!ready?"gray":""}>
-					Request a data parcel via the buyer account:
+					<button type="button" disabled={!ready} onClick={onRequest}>
+						Request
+					</button>
+					&nbsp;
+					Buyer: request a granted usage for a data parcel
 				</span>
-				<input type="button" value="Request" disabled={!ready}/>
 			</div>
 			<div>
 				<span className={!ready?"gray":""}>
-					Grant a data parcel usage via the seller account:
+					<button type="button" disabled={!ready} onClick={onGrant}>
+						Grant
+					</button>
+					&nbsp;
+					Seller: grant a data parcel usage
 				</span>
-				<input type="button" value="Grant" disabled={!ready}/>
 			</div>
 		</div>
 	);
