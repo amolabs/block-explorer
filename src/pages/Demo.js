@@ -176,13 +176,13 @@ const Trader = ({state}) => {
 	if (state
 		&& state.seller && state.seller.address
 		&& state.buyer && state.buyer.address
-		&& state.parcel && state.parcel.id
+		&& state.parcel && state.parcel.id && state.parcel.custody
 	) {
 		ready = true;
 	}
 
 	if (ready) {
-		msg = "trader screen";
+		msg = "Trading demo.";
 	} else {
 		msg = "Please setup two demo accounts and parcel data.";
 	}
@@ -191,8 +191,21 @@ const Trader = ({state}) => {
 		<div className="container round-box">
 			<div>{msg}</div>
 			<div>
+				<span className={!ready?"gray":""}>
+					Register a data pacel via the seller account:
+				</span>
 				<input type="button" value="Register" disabled={!ready}/>
+			</div>
+			<div>
+				<span className={!ready?"gray":""}>
+					Request a data parcel via the buyer account:
+				</span>
 				<input type="button" value="Request" disabled={!ready}/>
+			</div>
+			<div>
+				<span className={!ready?"gray":""}>
+					Grant a data parcel usage via the seller account:
+				</span>
 				<input type="button" value="Grant" disabled={!ready}/>
 			</div>
 		</div>
