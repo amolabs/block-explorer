@@ -2,16 +2,16 @@
 import axios from 'axios';
 import sha256 from 'sha256';
 
-//const URL = 'localhost:26657';
-//const URL = '192.168.50.88:26657';
-const URL = '139.162.116.176:26657';
-const wsURL = `ws://${URL}/websocket`;
-const curlURL = `http://${URL}`;
+//const HOST = 'localhost:26657';
+//const HOST = '192.168.50.88:26657';
+const HOST = '139.162.116.176:26657';
+const wsURL = `ws://${HOST}/websocket`;
+const httpURL = `http://${HOST}`;
 
 let ws;
 
 /* web socket based new block subscription */
-export const startSubscribe = (onNewBlock, onError) => {
+export function startSubscribe(onNewBlock, onError) {
 	ws = new WebSocket(wsURL);
 
 	// register callbacks for web socket
@@ -35,34 +35,34 @@ export const startSubscribe = (onNewBlock, onError) => {
 		}
 	};
 	ws.onerror = onError;
-};
+}
 
-/* block related rpc */
+//////// block query rpc
 
-const formatBlockHeader = meta => {
+function formatBlockHeader(blk) {
 	return {
-		chain: meta.header.chain_id,
-		hash: meta.block_id.hash,
-		height: meta.header.height,
-		proposer: meta.header.proposer_address,
-		numTx: meta.header.num_txs,
-		timestamp: meta.header.time,
+		chain: blk.header.chain_id,
+		hash: blk.block_id.hash,
+		height: blk.header.height,
+		proposer: blk.header.proposer_address,
+		numTx: blk.header.num_txs,
+		timestamp: blk.header.time,
 	};
-};
+}
 
-export const fetchLastBlock = callback => {
-	axios.get(`${curlURL}/block`).then(res => {
+export function fetchLastBlock(callback) {
+	axios.get(`${httpURL}/block`).then(res => {
 		callback(formatBlockHeader(res.data.result.block_meta));
 	});
-};
+}
 
-export const fetchLastHeight = callback => {
+export function fetchLastHeight(callback) {
 	fetchLastBlock(result => {
 		callback(parseInt(result.height));
 	});
-};
+}
 
-const formatBlock = blk => {
+function formatBlock(blk) {
 	if (!blk.data.txs) {
 		blk.data.txs = [];
 	}
@@ -78,10 +78,10 @@ const formatBlock = blk => {
 			return tx;
 		}),
 	};
-};
+}
 
-export const fetchBlock = (height, callback) => {
-	axios.get(`${curlURL}/block?height=${height}`).then(
+export function fetchBlock(height, callback) {
+	axios.get(`${httpURL}/block?height=${height}`).then(
 		res => {
 			if ('error' in res.data) {
 				callback({});
@@ -90,79 +90,64 @@ export const fetchBlock = (height, callback) => {
 			}
 		}
 	);
-};
+}
 
-export const fetchBlockMetas = (maxHeight, count, callback) => {
+export function fetchBlockHeaders(maxHeight, count, callback) {
 	const minHeight = Math.max(1, maxHeight - count + 1);
 	axios
 		.get(
-			`${curlURL}/blockchain?maxHeight=${maxHeight}&minHeight=${minHeight}`
+			`${httpURL}/blockchain?maxHeight=${maxHeight}&minHeight=${minHeight}`
 		)
 		.then(res => {
 			callback(
-				res.data.result.block_metas.map(meta => {
-					return formatBlockHeader(meta);
-				})
+				res.data.result.block_metas.map(formatBlockHeader)
 			);
 		});
-};
+}
 
-export const fetchRecentBlockHeaders = callback => {
+export function fetchRecentBlockHeaders(callback) {
 	// will retrieve most recent 20 block headers
-	axios.get(`${curlURL}/blockchain`).then(res => {
+	axios.get(`${httpURL}/blockchain`).then(res => {
 		callback(
-			res.data.result.block_metas.map(meta => {
-				return formatBlockHeader(meta);
-			})
+			res.data.result.block_metas.map(formatBlockHeader)
 		);
 	});
-};
+}
 
-/* tx related rpc */
-const refineTxMeta = meta => {
+//////// tx query rpc
+
+function formatTx(tmTx) {
 	return {
-		hash: meta.hash,
-		height: meta.height,
-		index: meta.index,
-		txResult: meta.tx_result,
-		sender: meta.tx.sender,
-		type: meta.tx.type,
-		nonce: meta.tx.nonce,
-		payload: meta.tx.payload,
+		hash: tmTx.hash,
+		height: tmTx.height,
+		index: tmTx.index,
+		txResult: tmTx.tx_result,
+		sender: tmTx.tx.sender,
+		type: tmTx.tx.type,
+		nonce: tmTx.tx.nonce,
+		payload: tmTx.tx.payload,
 	};
-};
+}
 
-export const fetchTx = (hash, callback) => {
-	axios.get(`${curlURL}/tx?hash=0x${hash}`).then(
+export function fetchTx(hash, callback) {
+	axios.get(`${httpURL}/tx?hash=0x${hash}`).then(
 		res => {
 			if ('error' in res.data) {
 				callback({});
 			} else {
-				var txMeta = res.data.result;
-				txMeta.tx = JSON.parse(atob(res.data.result.tx));
-				callback(refineTxMeta(txMeta));
+				var tmTx = res.data.result;
+				tmTx.tx = JSON.parse(atob(res.data.result.tx));
+				callback(formatTx(tmTx));
 			}
 		}
 	);
-};
+}
 
-export const getTx = (hash, callback) => {
-	axios.get(`${curlURL}/tx?hash=0x${hash}`).then(res => {
-		const hash = res.data.result.hash;
-		const txMsg = res.data.result.tx;
-
-		callback({
-			hash: hash,
-			...JSON.parse(atob(txMsg)),
-		});
-	});
-};
-
-export const fetchRecentTxs = callback => {
+export function fetchRecentTxs(callback) {
 	fetchRecentBlockHeaders(blocks => {
 		const promises = blocks
 			.filter(b => b.numTx > 0)
-			.map(b => axios.get(`${curlURL}/block?height=${b.height}`));
+			.map(b => axios.get(`${httpURL}/block?height=${b.height}`));
 
 		Promise.all(promises).then(responses => {
 			callback(
@@ -179,31 +164,58 @@ export const fetchRecentTxs = callback => {
 			);
 		});
 	});
-};
+}
 
-export const fetchAccountByAddress = (address, callback) => {
-	var account = { address: address }
+// TODO: pagination
+export function fetchAccountTxs(address, callback) {
+	axios.get(`${httpURL}/tx_search?query="tx.sender='${address}'"`).then(
+		res => {
+			callback(res.data.result.txs.map(tx => {
+				tx.tx = JSON.parse(atob(tx.tx))
+				return formatTx(tx);
+			}));
+		}
+	);
+}
 
-	callback( account );
-};
+//////// abci query rpc
 
-export const fetchBalance = (address, callback) => {
+export function abciQuery(type, params, onSuccess, onError) {
+	let data;
+	data = JSON.stringify(params).replace(/"/g, '\\"');
+
+	axios
+		.get(`${httpURL}/abci_query?path="/${type}"&data="${data}"`)
+		.then(res => {
+			if (res.data.error) onError(res.data.error);
+			else onSuccess(res.data.result.response.value);
+		});
+}
+
+export function fetchBalance(address, callback) {
 	abciQuery('balance', address,
 		res => { callback(parseBalance(res)); },
 		err => { callback(0); }
 	);
-};
-
-function parseBalance(result) {
-	return JSON.parse(atob(result)); // see btoa() also
 }
 
-export const fetchStake = (address, callback) => {
+export function fetchStake(address, callback) {
 	abciQuery('stake', address,
 		res => { callback(parseStake(res)); },
 		err => { callback(0); } // TODO: check this
 	);
-};
+}
+
+export function fetchParcel(id, callback) {
+	abciQuery('parcel', id,
+		res => { callback(parseParcel(res)); },
+		err => { callback(0); } // TODO: check this
+	);
+}
+
+function parseBalance(result) {
+	return JSON.parse(atob(result));
+}
 
 function parseStake(result) {
 	var parsed = JSON.parse(atob(result));
@@ -214,25 +226,6 @@ function parseStake(result) {
 	};
 	return stake
 }
-
-// TODO: pagination
-export const fetchAccountTxs = (address, callback) => {
-	axios.get(`${curlURL}/tx_search?query="tx.sender='${address}'"`).then(
-		res => {
-			callback(res.data.result.txs.map(tx => {
-				tx.tx = JSON.parse(atob(tx.tx))
-				return refineTxMeta(tx);
-			}));
-		}
-	);
-};
-
-export const fetchParcel = (id, callback) => {
-	abciQuery('parcel', id,
-		res => { callback(parseParcel(res)); },
-		err => { callback(0); } // TODO: check this
-	);
-};
 
 function parseParcel(result) {
 	var parsed = JSON.parse(atob(result));
@@ -248,15 +241,3 @@ function bytes2hex(bytes) {
 	return bytes.map(b => {return ('0'+b.toString(16)).slice(-2);}).join('');
 }
 
-/* query related rpc */
-export const abciQuery = (type, params, onSuccess, onError) => {
-	let data;
-	data = JSON.stringify(params).replace(/"/g, '\\"');
-
-	axios
-		.get(`${curlURL}/abci_query?path="/${type}"&data="${data}"`)
-		.then(res => {
-			if (res.data.error) onError(res.data.error);
-			else onSuccess(res.data.result.response.value);
-		});
-};

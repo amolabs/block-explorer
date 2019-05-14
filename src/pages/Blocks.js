@@ -1,7 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { fetchBlockMetas, fetchLastHeight } from '../rpc';
+import { fetchBlockHeaders, fetchLastHeight } from '../rpc';
 import PageNav from '../components/PageNav';
 import queryString from 'query-string';
 
@@ -23,7 +23,7 @@ class Blocks extends Component {
 		const page = this.getCurrentPage();
 
 		fetchLastHeight(lastHeight => {
-			fetchBlockMetas(
+			fetchBlockHeaders(
 				lastHeight - (page - 1) * blocksPerPage,
 				blocksPerPage,
 				result => {
