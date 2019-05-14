@@ -31,8 +31,11 @@ export class TextInput extends Component {
 				<form className="d-flex flex-column mt-3" onSubmit={this.handleSubmit}>
 					<div className="input-group mb-3">
 						<span className="input-group-text" id="basic-addon1">{desc}</span>
-						<input type="text" className="form-control"
-							name={name} value={this.state.value} onChange={this.handleChange}/>
+						<input
+							type="text" className="form-control"
+							name={name} value={this.state.value?this.state.value:''}
+							onChange={this.handleChange}
+						/>
 						<button type="submit" className="btn btn-secondary ml-auto">
 							{button}
 						</button>
