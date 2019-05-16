@@ -4,6 +4,8 @@ import { withRouter } from 'react-router-dom';
 import { TxBody } from '../components/Tx';
 import { TextInput, KeyValueRow, accountLink, blockLink } from '../util';
 import { fetchTx } from '../rpc';
+import { ec as EC } from 'elliptic';
+import sha256 from 'sha256';
 
 class Tx extends Component {
 	state = {
@@ -44,6 +46,8 @@ class TxDetail extends Component {
 			sender: "loading...",
 			type: "loading...",
 			nonce: "loading...",
+			pubkey: "loading...",
+			sigBytes: "loading...",
 		}
 	};
 
@@ -74,20 +78,44 @@ class TxDetail extends Component {
 		if (!txHashAlt) {
 			txHashAlt = ( <span>Input transaction hash to inspect &uarr;</span> );
 		}
-		const sender = accountLink(this.state.tx.sender);
+		const tx = this.state.tx;
+		const sender = accountLink(tx.sender);
 		const position = (
-			<span> index {this.state.tx.index} in
-				a block at height {blockLink(this.state.tx.height)}
+			<span> index {tx.index} in
+				a block at height {blockLink(tx.height)}
 			</span>
 		);
+
+		// sig
+		var valid = false;
+		if (typeof tx.pubkey === 'string' && tx.pubkey.length === 130) {
+			const sb = JSON.stringify({
+				type: tx.type,
+				sender: tx.sender,
+				nonce: tx.nonce,
+				payload: tx.payload,
+			});
+			var ec = new EC('p256');
+			var ecKey = ec.keyFromPublic(tx.pubkey, 'hex');
+			const hash = sha256(sb);
+			valid = ecKey.verify(hash, {
+				r: tx.sigBytes.substring(0,64),
+				s: tx.sigBytes.substring(64,128),
+			});
+		}
+
+		// TODO: format
 		return (
 			<div className="container">
 				<KeyValueRow k="TxHash" v={txHashAlt} />
 				<KeyValueRow k="Position" v={position} />
 				<KeyValueRow k="Sender" v={sender} />
-				<KeyValueRow k="Nonce" v={this.state.tx.nonce} />
-				<KeyValueRow k="Type" v={this.state.tx.type} />
-				<TxBody tx={this.state.tx} />
+				<KeyValueRow k="Nonce" v={tx.nonce} />
+				<KeyValueRow k="Type" v={tx.type} />
+				<TxBody tx={tx} />
+				<KeyValueRow k="Pubkey" v={tx.pubkey} />
+				<KeyValueRow k="Signature" v={tx.sigBytes} />
+				<KeyValueRow k="Verify" v={valid?"valid":"invalid"} />
 			</div>
 		);
 	}

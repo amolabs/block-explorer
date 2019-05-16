@@ -126,6 +126,8 @@ function formatTx(tmTx) {
 		type: tmTx.tx.type,
 		nonce: tmTx.tx.nonce,
 		payload: tmTx.tx.payload,
+		pubkey: tmTx.tx.signature.pubkey,
+		sigBytes: tmTx.tx.signature.sig_bytes,
 	};
 }
 
