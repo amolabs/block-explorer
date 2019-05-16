@@ -3,31 +3,43 @@ import React, { Component } from 'react';
 import { ec as EC } from 'elliptic';
 import sha256 from 'sha256';
 import { RIEInput, RIETextArea } from 'riek';
-import { registerParcel, requestParcel, grantParcel } from '../rpc';
+import { fetchBalance, registerParcel, requestParcel, grantParcel } from '../rpc';
 
 class Demo extends Component {
 	state = {
-		seller: { seed: null, address: null, ecKey: null, },
-		buyer: { seed: null, address: null, ecKey: null, },
+		seller: { seed: null, address: null, ecKey: null, balance: 0, },
+		buyer: { seed: null, address: null, ecKey: null, balance: 0, },
 		parcel: { id: null, custody: null, extra: null },
 		action: null,
+		remoteUpdate: false,
 	};
 
 	componentDidMount() {
 		if (this.state.seller.seed) {
-			this.updateSeller(this.state.seller.seed);
+			this.setSellerAddress(this.state.seller.seed);
+			this.setState({remoteUpdate: true});
 		}
 		if (this.state.buyer.seed) {
-			this.updateBuyer(this.state.buyer.seed);
+			this.setBuyerAddress(this.state.buyer.seed);
+			this.setState({remoteUpdate: true});
 		}
 	}
 
-	updateSeller = (seed) => {
+	componentDidUpdate(props, state) {
+		if (this.state.remoteUpdate) {
+			this.updateBalance();
+			this.setState({remoteUpdate: false});
+		}
+	}
+
+	setSellerAddress = (seed) => {
 		this.setState({ action: 'seller', seller: this.makeNewAccount(seed) });
+		this.setState({remoteUpdate: true});
 	};
 
-	updateBuyer = (seed) => {
+	setBuyerAddress = (seed) => {
 		this.setState({ action: 'buyer', buyer: this.makeNewAccount(seed) });
+		this.setState({remoteUpdate: true});
 	};
 
 	makeNewAccount = (seed) => {
@@ -35,7 +47,28 @@ class Demo extends Component {
 		const ecKey = ec.keyFromPrivate(sha256(seed));
 		const pub= ecKey.getPublic().encode();
 		const address = sha256(pub).slice(0,40);
-		return { seed: seed, address: address, ecKey: ecKey };
+		return { seed: seed, address: address, ecKey: ecKey, balance: 0 };
+	};
+
+	updateBalance = () => {
+		if (this.state.seller.address) {
+			fetchBalance(this.state.seller.address, (balance) => {
+				this.setState((state, props) => {
+					var seller = state.seller;
+					seller.balance = balance;
+					return { seller: seller };
+				})
+			});
+		}
+		if (this.state.buyer.address) {
+			fetchBalance(this.state.buyer.address, (balance) => {
+				this.setState((state, props) => {
+					var buyer = state.buyer;
+					buyer.balance = balance;
+					return { buyer: buyer };
+				})
+			});
+		}
 	};
 
 	updateParcelId = (id) => {
@@ -120,12 +153,12 @@ class Demo extends Component {
 						<DemoAccount
 							heading='Seller account'
 							account={this.state.seller}
-							onInputSeed={this.updateSeller}
+							onInputSeed={this.setSellerAddress}
 						/>
 						<DemoAccount
 							heading='Buyer account'
 							account={this.state.buyer}
-							onInputSeed={this.updateBuyer}
+							onInputSeed={this.setBuyerAddress}
 						/>
 						<DemoParcel
 							parcel={this.state.parcel}
@@ -157,18 +190,11 @@ class Demo extends Component {
 
 const DemoAccount = ({heading, account, onInputSeed}) => {
 	if (!account) { // this is for a fail-safe. not needed really
-		account = {seed: null, address: null, ecKey: null};
+		account = {seed: null, address: null, ecKey: null, balance: 0};
 	}
 	return (
 		<div className="container round-box">
 			<b>{heading}</b>
-			<div className="container">
-				Address: {
-					account.address?
-						account.address:
-						(<span style={{fontStyle:"italic",color:"gray"}}>not generated yet</span>)
-				}
-			</div>
 			<div className="container">
 				Seed:&nbsp;
 				<RIEInput
@@ -180,6 +206,16 @@ const DemoAccount = ({heading, account, onInputSeed}) => {
 						account.seed?{}:{style:{fontStyle:"italic",color:"gray"}}
 					}
 				/>
+			</div>
+			<div className="container">
+				Address: {
+					account.address?
+						account.address:
+						(<span style={{fontStyle:"italic",color:"gray"}}>not generated yet</span>)
+				}
+			</div>
+			<div className="container">
+				Balance: {account.balance}
 			</div>
 		</div>
 	);
