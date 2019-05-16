@@ -303,3 +303,44 @@ export function registerParcel(parcel, sender, callback, errCallback) {
 	sendTx(rawTx, callback, errCallback);
 }
 
+export function requestParcel(parcel, payment, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'request',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+			payment: payment,
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
+export function grantParcel(parcel, buyer, custody, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'request',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+			grantee: buyer.address.toUpperCase(),
+			custody: custody.toUpperCase(),
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+

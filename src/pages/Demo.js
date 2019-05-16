@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { ec as EC } from 'elliptic';
 import sha256 from 'sha256';
 import { RIEInput, RIETextArea } from 'riek';
-import { registerParcel } from '../rpc';
+import { registerParcel, requestParcel, grantParcel } from '../rpc';
 
 class Demo extends Component {
 	state = {
@@ -69,6 +69,39 @@ class Demo extends Component {
 				this.state.seller,
 				(res) => {
 					this.setState({ action: 'register' });
+				},
+				(err) => {
+					alert('error = ' + err.message + ': ' + err.data);
+				}
+			);
+		}
+	};
+
+	sendRequest = () => {
+		if (this.state.seller.ecKey) { // sanity check
+			requestParcel(
+				this.state.parcel,
+				0,
+				this.state.seller,
+				(res) => {
+					this.setState({ action: 'request' });
+				},
+				(err) => {
+					alert('error = ' + err.message + ': ' + err.data);
+				}
+			);
+		}
+	};
+
+	sendGrant = () => {
+		if (this.state.seller.ecKey) { // sanity check
+			grantParcel(
+				this.state.parcel,
+				this.state.buyer,
+				'1f1f1f1f',
+				this.state.seller,
+				(res) => {
+					this.setState({ action: 'grant' });
 				},
 				(err) => {
 					alert('error = ' + err.message + ': ' + err.data);
