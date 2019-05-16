@@ -3,13 +3,13 @@ import React, { Component } from 'react';
 import { ec as EC } from 'elliptic';
 import sha256 from 'sha256';
 import { RIEInput, RIETextArea } from 'riek';
-import { fetchBalance, registerParcel, requestParcel, grantParcel } from '../rpc';
+import * as rpc from '../rpc';
 
 class Demo extends Component {
 	state = {
 		seller: { seed: null, address: null, ecKey: null, balance: 0, },
 		buyer: { seed: null, address: null, ecKey: null, balance: 0, },
-		parcel: { id: null, custody: null, extra: null },
+		parcel: { id: null, custody: null, extra: null, owner: null, buyer: null, grant: null },
 		action: null,
 		remoteUpdate: false,
 	};
@@ -27,7 +27,7 @@ class Demo extends Component {
 
 	componentDidUpdate(props, state) {
 		if (this.state.remoteUpdate) {
-			this.updateBalance();
+			this.remoteUpdate();
 			this.setState({remoteUpdate: false});
 		}
 	}
@@ -50,58 +50,41 @@ class Demo extends Component {
 		return { seed: seed, address: address, ecKey: ecKey, balance: 0 };
 	};
 
-	updateBalance = () => {
-		if (this.state.seller.address) {
-			fetchBalance(this.state.seller.address, (balance) => {
-				this.setState((state, props) => {
-					var seller = state.seller;
-					seller.balance = balance;
-					return { seller: seller };
-				})
-			});
-		}
-		if (this.state.buyer.address) {
-			fetchBalance(this.state.buyer.address, (balance) => {
-				this.setState((state, props) => {
-					var buyer = state.buyer;
-					buyer.balance = balance;
-					return { buyer: buyer };
-				})
-			});
-		}
-	};
-
-	updateParcelId = (id) => {
+	setParcelId = (id) => {
 		this.setState((prevState, props) => {
 			var parcel = prevState.parcel;
 			parcel.id = id;
 			return { parcel: parcel };
 		});
+		this.setState({remoteUpdate: true});
 	};
 
-	updateKeyCustody = (custody) => {
+	setKeyCustody = (custody) => {
 		this.setState((prevState, props) => {
 			var parcel = prevState.parcel;
 			parcel.custody = custody;
 			return { parcel: parcel };
 		});
+		this.setState({remoteUpdate: true});
 	};
 
-	updateExtra = (extra) => {
+	setExtra = (extra) => {
 		this.setState((prevState, props) => {
 			var parcel = prevState.parcel;
 			parcel.extra = extra;
 			return { parcel: parcel };
 		});
+		this.setState({remoteUpdate: true});
 	};
 
 	sendRegister = () => {
 		if (this.state.seller.ecKey) { // sanity check
-			registerParcel(
+			rpc.registerParcel(
 				this.state.parcel,
 				this.state.seller,
 				(res) => {
 					this.setState({ action: 'register' });
+					this.setState({ remoteUpdate: true });
 				},
 				(err) => {
 					alert('error = ' + err.message + ': ' + err.data);
@@ -111,13 +94,14 @@ class Demo extends Component {
 	};
 
 	sendRequest = () => {
-		if (this.state.seller.ecKey) { // sanity check
-			requestParcel(
+		if (this.state.buyer.ecKey) { // sanity check
+			rpc.requestParcel(
 				this.state.parcel,
-				0,
-				this.state.seller,
+				"0",
+				this.state.buyer,
 				(res) => {
 					this.setState({ action: 'request' });
+					this.setState({ remoteUpdate: true });
 				},
 				(err) => {
 					alert('error = ' + err.message + ': ' + err.data);
@@ -128,18 +112,75 @@ class Demo extends Component {
 
 	sendGrant = () => {
 		if (this.state.seller.ecKey) { // sanity check
-			grantParcel(
+			rpc.grantParcel(
 				this.state.parcel,
 				this.state.buyer,
 				'1f1f1f1f',
 				this.state.seller,
 				(res) => {
 					this.setState({ action: 'grant' });
+					this.setState({ remoteUpdate: true });
 				},
 				(err) => {
 					alert('error = ' + err.message + ': ' + err.data);
 				}
 			);
+		}
+	};
+
+	remoteUpdate = () => {
+		if (this.state.seller.address) {
+			rpc.fetchBalance(this.state.seller.address, (balance) => {
+				this.setState((state, props) => {
+					var seller = state.seller;
+					seller.balance = balance;
+					return { seller: seller };
+				})
+			});
+		}
+		if (this.state.buyer.address) {
+			rpc.fetchBalance(this.state.buyer.address, (balance) => {
+				this.setState((state, props) => {
+					var buyer = state.buyer;
+					buyer.balance = balance;
+					return { buyer: buyer };
+				})
+			});
+		}
+		if (this.state.parcel.id) {
+			rpc.fetchParcel(this.state.parcel.id, (res) => {
+				var owner = '';
+				var custody = this.state.parcel.custody;
+				if (res) {
+					owner = this.state.seller.address;
+					custody = res.custody;
+				}
+				var parcel = this.state.parcel;
+				parcel.owner = owner.toUpperCase();
+				parcel.custody = custody;
+				this.setState({ parcel: parcel });
+			});
+			rpc.fetchRequest(this.state.buyer.address, this.state.parcel.id, (res) => {
+				var buyer = '';
+				var payment = null;
+				if (res) {
+					buyer = this.state.buyer.address;
+					payment = res.payment;
+				}
+				var parcel = this.state.parcel;
+				parcel.buyer = buyer.toUpperCase();
+				parcel.payment = payment;
+				this.setState({ parcel: parcel });
+			});
+			rpc.fetchUsage(this.state.buyer.address, this.state.parcel.id, (res) => {
+				var grant = '';
+				if (res) {
+					grant = this.state.buyer.address;
+				}
+				var parcel = this.state.parcel;
+				parcel.grant = grant.toUpperCase();
+				this.setState({ parcel: parcel });
+			});
 		}
 	};
 
@@ -162,9 +203,9 @@ class Demo extends Component {
 						/>
 						<DemoParcel
 							parcel={this.state.parcel}
-							onInputParcelId={this.updateParcelId}
-							onInputCustody={this.updateKeyCustody}
-							onInputExtra={this.updateExtra}
+							onInputParcelId={this.setParcelId}
+							onInputCustody={this.setKeyCustody}
+							onInputExtra={this.setExtra}
 						/>
 						<Trader
 							state={this.state}
@@ -223,14 +264,12 @@ const DemoAccount = ({heading, account, onInputSeed}) => {
 
 const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => {
 	if (!parcel) {
-		parcel = {id: null, custody: null};
+		parcel = {id: null, owner: null, custody: null, extra: null, buyer: null};
 	}
 	return (
 		<div className="container round-box">
 			<b>Data parcel</b>
 			<div className="container">
-				{/*<div>Parcel ID(check): {parcel.id}</div>*/}
-				{/*<div>Key custody(check): {parcel.custody}</div>*/}
 				<div>Parcel ID:&nbsp;
 					<RIEInput
 						value={parcel.id?parcel.id:'input id and press enter'}
@@ -264,21 +303,39 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 						}
 					/>
 				</div>
+				<div>Owner: {parcel.owner}</div>
+				<div>Buyer: {parcel.buyer}</div>
+				<div>Grant: {parcel.grant}</div>
 			</div>
 		</div>
 	);
 };
 
 const Trader = ({state, onRegister, onRequest, onGrant}) => {
-	var msg;
-	var ready = false;
+	var msg, registerReady, requestReady, grantReady;
 	if (state
 		&& state.seller && state.seller.address
-		&& state.buyer && state.buyer.address
 		&& state.parcel && state.parcel.id && state.parcel.custody
+		&& !state.parcel.owner
 	) {
-		ready = true;
+		registerReady = true;
 	}
+	if (state
+		&& state.buyer && state.buyer.address
+		&& state.parcel && state.parcel.owner
+		&& state.parcel.buyer !== state.buyer.address.toUpperCase()
+		&& state.parcel.grant !== state.buyer.address.toUpperCase()
+	) {
+		requestReady = true;
+	}
+	if (state
+		&& state.seller && state.seller.address
+		&& state.parcel && state.parcel.buyer
+		&& state.parcel.buyer === state.buyer.address.toUpperCase()
+	) {
+		grantReady = true;
+	}
+	var ready = registerReady | requestReady | grantReady;
 
 	if (ready) {
 		msg = "Trading demo.";
@@ -290,8 +347,8 @@ const Trader = ({state, onRegister, onRequest, onGrant}) => {
 		<div className="container round-box trader">
 			<div>{msg}</div>
 			<div>
-				<span className={!ready?"gray":""}>
-					<button type="button" disabled={!ready} onClick={onRegister}>
+				<span className={!registerReady?"gray":""}>
+					<button type="button" disabled={!registerReady} onClick={onRegister}>
 						Register
 					</button>
 					&nbsp;
@@ -299,8 +356,8 @@ const Trader = ({state, onRegister, onRequest, onGrant}) => {
 				</span>
 			</div>
 			<div>
-				<span className={!ready?"gray":""}>
-					<button type="button" disabled={!ready} onClick={onRequest}>
+				<span className={!requestReady?"gray":""}>
+					<button type="button" disabled={!requestReady} onClick={onRequest}>
 						Request
 					</button>
 					&nbsp;
@@ -308,8 +365,8 @@ const Trader = ({state, onRegister, onRequest, onGrant}) => {
 				</span>
 			</div>
 			<div>
-				<span className={!ready?"gray":""}>
-					<button type="button" disabled={!ready} onClick={onGrant}>
+				<span className={!grantReady?"gray":""}>
+					<button type="button" disabled={!grantReady} onClick={onGrant}>
 						Grant
 					</button>
 					&nbsp;
@@ -363,6 +420,15 @@ const ConsoleGuide = ({state}) => {
 			parcel = state.parcel;
 			cmd = 'amocli tx register '+parcel.id+' '+parcel.custody;
 			guide = (<span className="gray">This command will register a new data parcel to the AMO blockchain, with parcel id <b>{parcel.id}</b> and <b>{parcel.custody}</b> as the owner's key custody.</span>);
+			break;
+		case 'request':
+			parcel = state.parcel;
+			cmd = 'amocli tx request '+parcel.id+' '+0;
+			guide = (<span className="gray">This command will request a data parcel in the AMO blockchain on behalf of the buyer, with parcel id <b>{parcel.id}</b> and payment <b>0</b>.</span>);
+			break;
+		case 'grant':
+			parcel = state.parcel;
+			cmd = 'amocli tx grant '+parcel.id+' '+state.buyer.address+' 1f1f';
 			break;
 		default:
 			cmd = 'no command';

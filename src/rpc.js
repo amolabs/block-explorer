@@ -198,47 +198,37 @@ export function abciQuery(type, params, onSuccess, onError) {
 
 export function fetchBalance(address, callback) {
 	abciQuery('balance', address,
-		res => { callback(parseBalance(res)); },
+		res => { callback(JSON.parse(atob(res))); },
 		err => { callback(0); }
 	);
 }
 
 export function fetchStake(address, callback) {
 	abciQuery('stake', address,
-		res => { callback(parseStake(res)); },
-		err => { callback(0); } // TODO: check this
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); }
 	);
 }
 
 export function fetchParcel(id, callback) {
 	abciQuery('parcel', id,
-		res => { callback(parseParcel(res)); },
-		err => { callback(0); } // TODO: check this
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); }
 	);
 }
 
-function parseBalance(result) {
-	return JSON.parse(atob(result));
+export function fetchRequest(buyer, target, callback) {
+	abciQuery('request', {buyer: buyer, target: target},
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); },
+	);
 }
 
-function parseStake(result) {
-	var parsed = JSON.parse(atob(result));
-	if (!parsed) parsed = {amount:0,validator:[]};
-	const stake = {
-		amount: parsed.amount,
-		validator: parsed.validator, // TODO
-	};
-	return stake
-}
-
-function parseParcel(result) {
-	var parsed = JSON.parse(atob(result));
-	if (!parsed) parsed = { owner: null, custody: [] };
-	const parcel = {
-		owner: parsed.owner,
-		custody: parsed.custody, // TODO: byte array
-	};
-	return parcel;
+export function fetchUsage(buyer, target, callback) {
+	abciQuery('usage', {buyer: buyer, target: target},
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); },
+	);
 }
 
 //////// send tx rpc
@@ -323,19 +313,19 @@ export function requestParcel(parcel, payment, sender, callback, errCallback) {
 	sendTx(rawTx, callback, errCallback);
 }
 
-export function grantParcel(parcel, buyer, custody, sender, callback, errCallback) {
+export function grantParcel(parcel, grantee, custody, sender, callback, errCallback) {
 	if (!sender || !sender.ecKey) {
 		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
 		return;
 	}
 
 	var tx = {
-		type: 'request',
+		type: 'grant',
 		sender: sender.address.toUpperCase(),
 		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			target: parcel.id.toUpperCase(),
-			grantee: buyer.address.toUpperCase(),
+			grantee: grantee.address.toUpperCase(),
 			custody: custody.toUpperCase(),
 		},
 	};
