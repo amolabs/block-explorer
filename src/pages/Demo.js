@@ -87,6 +87,22 @@ class Demo extends Component {
 		}
 	};
 
+	sendDiscard = () => {
+		if (this.state.seller.ecKey) { // sanity check
+			rpc.discardParcel(
+				this.state.parcel,
+				this.state.seller,
+				(res) => {
+					this.setState({ action: 'discard' });
+					this.setState({ remoteUpdate: true });
+				},
+				(err) => {
+					alert('error = ' + err.message + ': ' + err.data);
+				}
+			);
+		}
+	};
+
 	sendRequest = () => {
 		if (this.state.buyer.ecKey) { // sanity check
 			rpc.requestParcel(
@@ -95,6 +111,22 @@ class Demo extends Component {
 				this.state.buyer,
 				(res) => {
 					this.setState({ action: 'request' });
+					this.setState({ remoteUpdate: true });
+				},
+				(err) => {
+					alert('error = ' + err.message + ': ' + err.data);
+				}
+			);
+		}
+	};
+
+	sendCancel = () => {
+		if (this.state.buyer.ecKey) { // sanity check
+			rpc.cancelRequest(
+				this.state.parcel,
+				this.state.buyer,
+				(res) => {
+					this.setState({ action: 'cancel' });
 					this.setState({ remoteUpdate: true });
 				},
 				(err) => {
@@ -113,6 +145,23 @@ class Demo extends Component {
 				this.state.seller,
 				(res) => {
 					this.setState({ action: 'grant' });
+					this.setState({ remoteUpdate: true });
+				},
+				(err) => {
+					alert('error = ' + err.message + ': ' + err.data);
+				}
+			);
+		}
+	};
+
+	sendRevoke = () => {
+		if (this.state.seller.ecKey) { // sanity check
+			rpc.revokeGrant(
+				this.state.parcel,
+				this.state.buyer,
+				this.state.seller,
+				(res) => {
+					this.setState({ action: 'revoke' });
 					this.setState({ remoteUpdate: true });
 				},
 				(err) => {
@@ -206,8 +255,11 @@ class Demo extends Component {
 						<Trader
 							state={this.state}
 							onRegister={this.sendRegister}
+							onDiscard={this.sendDiscard}
 							onRequest={this.sendRequest}
+							onCancel={this.sendCancel}
 							onGrant={this.sendGrant}
+							onRevoke={this.sendRevoke}
 						/>
 						<div className="container">
 							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
@@ -307,8 +359,8 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 	);
 };
 
-const Trader = ({state, onRegister, onRequest, onGrant}) => {
-	var msg, registerReady, requestReady, grantReady;
+const Trader = ({state, onRegister, onDiscard, onRequest, onCancel, onGrant, onRevoke}) => {
+	var msg, registerReady, requestReady, grantReady, revokeReady;
 	if (state
 		&& state.seller && state.seller.address
 		&& state.parcel && state.parcel.id && state.parcel.custody
@@ -331,7 +383,14 @@ const Trader = ({state, onRegister, onRequest, onGrant}) => {
 	) {
 		grantReady = true;
 	}
-	var ready = registerReady | requestReady | grantReady;
+	if (state
+		&& state.seller && state.seller.address
+		&& state.parcel && state.parcel.grant
+		&& state.parcel.owner === state.seller.address.toUpperCase()
+	) {
+		revokeReady = true;
+	}
+	var ready = registerReady | requestReady | grantReady | revokeReady;
 
 	if (ready) {
 		msg = "Ready to send transactions.";
@@ -342,7 +401,8 @@ const Trader = ({state, onRegister, onRequest, onGrant}) => {
 	var registerView = (
 		<div className="container">
 			<div>
-				Click button to <b>register</b> data parcel on behalf of the <b>seller</b>.
+				Click the button <b>Register</b> to register data parcel on behalf of
+				the <b>seller</b>.
 			</div>
 			<button type="button" onClick={onRegister}>Register</button>
 		</div>
@@ -350,17 +410,40 @@ const Trader = ({state, onRegister, onRequest, onGrant}) => {
 	var requestView = (
 		<div className="container">
 			<div>
-				Click button to <b>request</b> a data parcel on behalf of the <b>buyer</b>.
+				Click the button <b>Request</b> to request a data parcel on behalf of
+				the <b>buyer</b>.
 			</div>
 			<button type="button" onClick={onRequest}>Request</button>
+			<hr/>
+			<div>
+				Click the button <b>Discard</b> to discard the registered parcel on
+				behalf of the <b>seller</b>.
+			</div>
+			<button type="button" onClick={onDiscard}>Discard</button>
 		</div>
 	);
 	var grantView = (
 		<div className="container">
 			<div>
-				Click button to <b>grant</b> a data parcel request on behalf of the <b>seller</b>.
+				Click the button <b>Grant</b> to grant a data parcel request on behalf
+				of the <b>seller</b>.
 			</div>
 			<button type="button" onClick={onGrant}>Grant</button>
+			<hr/>
+			<div>
+				Click the button <b>Cancel</b> to cancel the parcel request on behalf
+				of the <b>buyer</b>.
+			</div>
+			<button type="button" onClick={onCancel}>Cancel</button>
+		</div>
+	);
+	var revokeView = (
+		<div className="container">
+			<div>
+				Click the button <b>Revoke</b> to revoke a granted data parcel on
+				behalf of the <b>seller</b>.
+			</div>
+			<button type="button" onClick={onRevoke}>Revoke</button>
 		</div>
 	);
 
@@ -368,6 +451,7 @@ const Trader = ({state, onRegister, onRequest, onGrant}) => {
 	if (registerReady) view = registerView;
 	if (requestReady) view = requestView;
 	if (grantReady) view = grantView;
+	if (revokeReady) view = revokeView;
 
 	return (
 		<div className="container round-box trader">
@@ -422,14 +506,26 @@ const ConsoleGuide = ({state}) => {
 			cmd = 'amocli tx register '+parcel.id+' '+parcel.custody;
 			guide = (<span className="gray">This command will register a new data parcel to the AMO blockchain, with parcel id <b>{parcel.id}</b> and <b>{parcel.custody}</b> as the owner's key custody.</span>);
 			break;
+		case 'discard':
+			parcel = state.parcel;
+			cmd = 'amocli tx discard '+parcel.id;
+			break;
 		case 'request':
 			parcel = state.parcel;
 			cmd = 'amocli tx request '+parcel.id+' '+0;
 			guide = (<span className="gray">This command will request a data parcel in the AMO blockchain on behalf of the buyer, with parcel id <b>{parcel.id}</b> and payment <b>0</b>.</span>);
 			break;
+		case 'cancel':
+			parcel = state.parcel;
+			cmd = 'amocli tx cancel '+parcel.id;
+			break;
 		case 'grant':
 			parcel = state.parcel;
 			cmd = 'amocli tx grant '+parcel.id+' '+state.buyer.address+' 1f1f';
+			break;
+		case 'revoke':
+			parcel = state.parcel;
+			cmd = 'amocli tx revoke '+parcel.id+' '+state.buyer.address;
 			break;
 		default:
 			cmd = 'no command';

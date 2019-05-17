@@ -293,6 +293,25 @@ export function registerParcel(parcel, sender, callback, errCallback) {
 	sendTx(rawTx, callback, errCallback);
 }
 
+export function discardParcel(parcel, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'discard',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
 export function requestParcel(parcel, payment, sender, callback, errCallback) {
 	if (!sender || !sender.ecKey) {
 		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
@@ -306,6 +325,25 @@ export function requestParcel(parcel, payment, sender, callback, errCallback) {
 		payload: {
 			target: parcel.id.toUpperCase(),
 			payment: payment,
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
+export function cancelRequest(parcel, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'cancel',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
 		},
 	};
 
@@ -327,6 +365,26 @@ export function grantParcel(parcel, grantee, custody, sender, callback, errCallb
 			target: parcel.id.toUpperCase(),
 			grantee: grantee.address.toUpperCase(),
 			custody: custody.toUpperCase(),
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
+export function revokeGrant(parcel, grantee, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'revoke',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+			grantee: grantee.address.toUpperCase(),
 		},
 	};
 
