@@ -253,7 +253,9 @@ class Demo extends Component {
 							onInputExtra={this.setExtra}
 						/>
 						<Trader
-							state={this.state}
+							seller={this.state.seller}
+							buyer={this.state.buyer}
+							parcel={this.state.parcel}
 							onRegister={this.sendRegister}
 							onDiscard={this.sendDiscard}
 							onRequest={this.sendRequest}
@@ -359,108 +361,144 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 	);
 };
 
-const Trader = ({state, onRegister, onDiscard, onRequest, onCancel, onGrant, onRevoke}) => {
-	var msg, registerReady, requestReady, grantReady, revokeReady;
-	if (state
-		&& state.seller && state.seller.address
-		&& state.parcel && state.parcel.id && state.parcel.custody
-		&& !state.parcel.owner
-	) {
-		registerReady = true;
-	}
-	if (state
-		&& state.buyer && state.buyer.address
-		&& state.parcel && state.parcel.owner
-		&& state.parcel.buyer !== state.buyer.address.toUpperCase()
-		&& state.parcel.grant !== state.buyer.address.toUpperCase()
-	) {
-		requestReady = true;
-	}
-	if (state
-		&& state.seller && state.seller.address
-		&& state.parcel && state.parcel.buyer
-		&& state.parcel.buyer === state.buyer.address.toUpperCase()
-	) {
-		grantReady = true;
-	}
-	if (state
-		&& state.seller && state.seller.address
-		&& state.parcel && state.parcel.grant
-		&& state.parcel.owner === state.seller.address.toUpperCase()
-	) {
-		revokeReady = true;
-	}
-	var ready = registerReady | requestReady | grantReady | revokeReady;
+class Trader extends Component {
+	state = {
+		view: null,
+	};
 
-	if (ready) {
-		msg = "Ready to send transactions.";
-	} else {
-		msg = "Please setup demo accounts and parcel data.";
+	componentDidMount() {
+		this.setState({ view: this.decideView() });
 	}
 
-	var registerView = (
-		<div className="container">
-			<div>
-				Click the button <b>Register</b> to register data parcel on behalf of
-				the <b>seller</b>.
-			</div>
-			<button type="button" onClick={onRegister}>Register</button>
-		</div>
-	);
-	var requestView = (
-		<div className="container">
-			<div>
-				Click the button <b>Request</b> to request a data parcel on behalf of
-				the <b>buyer</b>.
-			</div>
-			<button type="button" onClick={onRequest}>Request</button>
-			<hr/>
-			<div>
-				Click the button <b>Discard</b> to discard the registered parcel on
-				behalf of the <b>seller</b>.
-			</div>
-			<button type="button" onClick={onDiscard}>Discard</button>
-		</div>
-	);
-	var grantView = (
-		<div className="container">
-			<div>
-				Click the button <b>Grant</b> to grant a data parcel request on behalf
-				of the <b>seller</b>.
-			</div>
-			<button type="button" onClick={onGrant}>Grant</button>
-			<hr/>
-			<div>
-				Click the button <b>Cancel</b> to cancel the parcel request on behalf
-				of the <b>buyer</b>.
-			</div>
-			<button type="button" onClick={onCancel}>Cancel</button>
-		</div>
-	);
-	var revokeView = (
-		<div className="container">
-			<div>
-				Click the button <b>Revoke</b> to revoke a granted data parcel on
-				behalf of the <b>seller</b>.
-			</div>
-			<button type="button" onClick={onRevoke}>Revoke</button>
-		</div>
-	);
+	componentDidUpdate(props, state) {
+		if (this.props !== props) {
+			this.setState({ view: this.decideView() });
+		}
+	}
 
-	var view;
-	if (registerReady) view = registerView;
-	if (requestReady) view = requestView;
-	if (grantReady) view = grantView;
-	if (revokeReady) view = revokeView;
+	decideView = () => {
+		var seller = this.props.seller;
+		var buyer = this.props.buyer;
+		var parcel = this.props.parcel;
 
-	return (
-		<div className="container round-box trader">
-			<b>Trading demo</b>
-			<div className="container" style={{color:"blue"}}>{msg}</div>
-			{view}
-		</div>
-	);
-};
+		if (seller && seller.address
+			&& parcel && parcel.id && parcel.custody
+			&& !parcel.owner
+		) {
+			return 'register';
+		} else if (buyer && buyer.address
+			&& parcel && parcel.owner
+			&& parcel.buyer !== buyer.address.toUpperCase()
+			&& parcel.grant !== buyer.address.toUpperCase()
+		) {
+			return 'request';
+		} else if (seller && seller.address
+			&& parcel && parcel.buyer
+			&& parcel.buyer === buyer.address.toUpperCase()
+		) {
+			return 'grant';
+		} else if (seller && seller.address
+			&& parcel && parcel.grant
+			&& parcel.owner === seller.address.toUpperCase()
+		) {
+			return 'revoke';
+		} else {
+			return null;
+		}
+	};
+
+	render() {
+		var msg;
+		if (this.state.view) {
+			msg = "Ready to send transactions.";
+		} else {
+			msg = "Please setup demo accounts and parcel data.";
+		}
+
+		var view;
+		switch (this.state.view) {
+			case 'register':
+				view = (
+					<div className="container">
+						<div>
+							Click the button <b>Register</b> to register data parcel on
+							behalf of the <b>seller</b>.
+						</div>
+						<button type="button" onClick={this.props.onRegister}>
+							Register
+						</button>
+					</div>
+				);
+				break;
+			case 'request':
+				view = (
+					<div className="container">
+						<div>
+							Click the button <b>Request</b> to request a data parcel on
+							behalf of the <b>buyer</b>.
+						</div>
+						<button type="button" onClick={this.props.onRequest}>
+							Request
+						</button>
+						<hr/>
+						<div>
+							Click the button <b>Discard</b> to discard the registered parcel
+							on behalf of the <b>seller</b>.
+						</div>
+						<button type="button" onClick={this.props.onDiscard}>
+							Discard
+						</button>
+					</div>
+				);
+				break;
+			case 'grant':
+				view = (
+					<div className="container">
+						<div>
+							Click the button <b>Grant</b> to grant a data parcel request on
+							behalf of the <b>seller</b>.
+						</div>
+						<button type="button" onClick={this.props.onGrant}>
+							Grant
+						</button>
+						<hr/>
+						<div>
+							Click the button <b>Cancel</b> to cancel the parcel request on
+							behalf of the <b>buyer</b>.
+						</div>
+						<button type="button" onClick={this.props.onCancel}>
+							Cancel
+						</button>
+					</div>
+				);
+				break;
+			case 'revoke':
+				view = (
+					<div className="container">
+						<div>
+							Click the button <b>Revoke</b> to revoke a granted data parcel on
+							behalf of the <b>seller</b>.
+						</div>
+						<button type="button" onClick={this.props.onRevoke}>
+							Revoke
+						</button>
+					</div>
+				);
+				break;
+			default:
+				view = (<div/>);
+				break;
+		}
+
+		return (
+			<div className="container round-box trader">
+				<b>Trading demo</b>
+				<div className="container" style={{color:"blue"}}>{msg}</div>
+				{view}
+			</div>
+		);
+	};
+}
 
 const StepGuide = ({state}) => {
 	var msg;
