@@ -51,29 +51,23 @@ class Demo extends Component {
 	};
 
 	setParcelId = (id) => {
-		this.setState((prevState, props) => {
-			var parcel = prevState.parcel;
-			parcel.id = id;
-			return { parcel: parcel };
-		});
+		var parcel = this.state.parcel;
+		parcel.id = id;
+		this.setState({ parcel: parcel });
 		this.setState({remoteUpdate: true});
 	};
 
 	setKeyCustody = (custody) => {
-		this.setState((prevState, props) => {
-			var parcel = prevState.parcel;
-			parcel.custody = custody;
-			return { parcel: parcel };
-		});
+		var parcel = this.state.parcel;
+		parcel.custody = custody;
+		this.setState({ parcel: parcel });
 		this.setState({remoteUpdate: true});
 	};
 
 	setExtra = (extra) => {
-		this.setState((prevState, props) => {
-			var parcel = prevState.parcel;
-			parcel.extra = extra;
-			return { parcel: parcel };
-		});
+		var parcel = this.state.parcel;
+		parcel.extra = extra;
+		this.setState({ parcel: parcel });
 		this.setState({remoteUpdate: true});
 	};
 
@@ -131,41 +125,41 @@ class Demo extends Component {
 	remoteUpdate = () => {
 		if (this.state.seller.address) {
 			rpc.fetchBalance(this.state.seller.address, (balance) => {
-				this.setState((state, props) => {
-					var seller = state.seller;
-					seller.balance = balance;
-					return { seller: seller };
-				})
+				var seller = this.state.seller;
+				seller.balance = balance;
+				this.setState({ seller: seller })
 			});
 		}
 		if (this.state.buyer.address) {
 			rpc.fetchBalance(this.state.buyer.address, (balance) => {
-				this.setState((state, props) => {
-					var buyer = state.buyer;
-					buyer.balance = balance;
-					return { buyer: buyer };
-				})
+				var buyer = this.state.buyer;
+				buyer.balance = balance;
+				this.setState({ buyer: buyer })
 			});
 		}
 		if (this.state.parcel.id) {
 			rpc.fetchParcel(this.state.parcel.id, (res) => {
-				var owner = '';
-				var custody = this.state.parcel.custody;
+				var owner, custody;
 				if (res) {
-					owner = this.state.seller.address;
+					owner = res.owner;
 					custody = res.custody;
+				} else {
+					owner = '';
+					custody = this.state.parcel.custody;
 				}
 				var parcel = this.state.parcel;
-				parcel.owner = owner.toUpperCase();
+				parcel.owner = owner;
 				parcel.custody = custody;
 				this.setState({ parcel: parcel });
 			});
 			rpc.fetchRequest(this.state.buyer.address, this.state.parcel.id, (res) => {
-				var buyer = '';
-				var payment = null;
+				var buyer, payment;
 				if (res) {
 					buyer = this.state.buyer.address;
 					payment = res.payment;
+				} else {
+					buyer = '';
+					payment = null;
 				}
 				var parcel = this.state.parcel;
 				parcel.buyer = buyer.toUpperCase();
@@ -173,9 +167,11 @@ class Demo extends Component {
 				this.setState({ parcel: parcel });
 			});
 			rpc.fetchUsage(this.state.buyer.address, this.state.parcel.id, (res) => {
-				var grant = '';
+				var grant;
 				if (res) {
 					grant = this.state.buyer.address;
+				} else {
+					grant = '';
 				}
 				var parcel = this.state.parcel;
 				parcel.grant = grant.toUpperCase();
@@ -338,41 +334,46 @@ const Trader = ({state, onRegister, onRequest, onGrant}) => {
 	var ready = registerReady | requestReady | grantReady;
 
 	if (ready) {
-		msg = "Trading demo.";
+		msg = "Ready to send transactions.";
 	} else {
-		msg = "Please setup two demo accounts and parcel data.";
+		msg = "Please setup demo accounts and parcel data.";
 	}
+
+	var registerView = (
+		<div className="container">
+			<div>
+				Click button to <b>register</b> data parcel on behalf of the <b>seller</b>.
+			</div>
+			<button type="button" onClick={onRegister}>Register</button>
+		</div>
+	);
+	var requestView = (
+		<div className="container">
+			<div>
+				Click button to <b>request</b> a data parcel on behalf of the <b>buyer</b>.
+			</div>
+			<button type="button" onClick={onRequest}>Request</button>
+		</div>
+	);
+	var grantView = (
+		<div className="container">
+			<div>
+				Click button to <b>grant</b> a data parcel request on behalf of the <b>seller</b>.
+			</div>
+			<button type="button" onClick={onGrant}>Grant</button>
+		</div>
+	);
+
+	var view;
+	if (registerReady) view = registerView;
+	if (requestReady) view = requestView;
+	if (grantReady) view = grantView;
 
 	return (
 		<div className="container round-box trader">
-			<div>{msg}</div>
-			<div>
-				<span className={!registerReady?"gray":""}>
-					<button type="button" disabled={!registerReady} onClick={onRegister}>
-						Register
-					</button>
-					&nbsp;
-					Seller: register a data pacel
-				</span>
-			</div>
-			<div>
-				<span className={!requestReady?"gray":""}>
-					<button type="button" disabled={!requestReady} onClick={onRequest}>
-						Request
-					</button>
-					&nbsp;
-					Buyer: request a granted usage for a data parcel
-				</span>
-			</div>
-			<div>
-				<span className={!grantReady?"gray":""}>
-					<button type="button" disabled={!grantReady} onClick={onGrant}>
-						Grant
-					</button>
-					&nbsp;
-					Seller: grant a data parcel usage
-				</span>
-			</div>
+			<b>Trading demo</b>
+			<div className="container" style={{color:"blue"}}>{msg}</div>
+			{view}
 		</div>
 	);
 };
