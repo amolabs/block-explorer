@@ -103,11 +103,11 @@ class Demo extends Component {
 		}
 	};
 
-	sendRequest = () => {
+	sendRequest = (payment) => {
 		if (this.state.buyer.ecKey) { // sanity check
 			rpc.requestParcel(
 				this.state.parcel,
-				"0",
+				payment,
 				this.state.buyer,
 				(res) => {
 					this.setState({ action: 'request' });
@@ -136,12 +136,12 @@ class Demo extends Component {
 		}
 	};
 
-	sendGrant = () => {
+	sendGrant = (custody) => {
 		if (this.state.seller.ecKey) { // sanity check
 			rpc.grantParcel(
 				this.state.parcel,
 				this.state.buyer,
-				'1f1f1f1f',
+				custody,
 				this.state.seller,
 				(res) => {
 					this.setState({ action: 'grant' });
@@ -216,14 +216,17 @@ class Demo extends Component {
 				this.setState({ parcel: parcel });
 			});
 			rpc.fetchUsage(this.state.buyer.address, this.state.parcel.id, (res) => {
-				var grant;
+				var grant, custody;
 				if (res) {
 					grant = this.state.buyer.address;
+					custody = res.custody;
 				} else {
 					grant = '';
+					custody = '';
 				}
 				var parcel = this.state.parcel;
 				parcel.grant = grant.toUpperCase();
+				parcel.buyerCustody = custody.toUpperCase();
 				this.setState({ parcel: parcel });
 			});
 		}
@@ -353,9 +356,20 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 						}
 					/>
 				</div>
-				<div>Owner: {parcel.owner}</div>
-				<div>Buyer: {parcel.buyer}</div>
-				<div>Grant: {parcel.grant}</div>
+				{parcel.owner?(<div>
+					<hr/>
+					<div>Owner: {parcel.owner}</div>
+				</div>):(<div/>)}
+				{parcel.buyer?(<div>
+					<hr/>
+					<div>Buyer: {parcel.buyer}</div>
+					<div>Pledged payment: {parcel.payment}</div>
+				</div>):(<div/>)}
+				{parcel.grant?(<div>
+					<hr/>
+					<div>Grant: {parcel.grant}</div>
+					<div>Key custody: {parcel.buyerCustody}</div>
+				</div>):(<div/>)}
 			</div>
 		</div>
 	);
@@ -364,6 +378,8 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 class Trader extends Component {
 	state = {
 		view: null,
+		paymentInput: 0,
+		custodyInput: '',
 	};
 
 	componentDidMount() {
@@ -375,6 +391,28 @@ class Trader extends Component {
 			this.setState({ view: this.decideView() });
 		}
 	}
+
+	handleReqChange = (e) => {
+		e.preventDefault();
+		this.setState({ paymentInput: e.target.value });
+	};
+
+	handleReqSubmit = (e) => {
+		e.preventDefault();
+		const payment = this.state.paymentInput;
+		this.props.onRequest(payment);
+	};
+
+	handleGrantChange = (e) => {
+		e.preventDefault();
+		this.setState({ custodyInput: e.target.value });
+	};
+
+	handleGrantSubmit = (e) => {
+		e.preventDefault();
+		const custody = this.state.custodyInput;
+		this.props.onGrant(custody);
+	};
 
 	decideView = () => {
 		var seller = this.props.seller;
@@ -437,9 +475,18 @@ class Trader extends Component {
 							Click the button <b>Request</b> to request a data parcel on
 							behalf of the <b>buyer</b>.
 						</div>
-						<button type="button" onClick={this.props.onRequest}>
-							Request
-						</button>
+						<form onSubmit={this.handleReqSubmit}>
+							Pledged payment:&nbsp;
+							<input
+								type="number"
+								name="payment"
+								value={this.state.paymentInput}
+								onChange={this.handleReqChange}
+							/>
+							<button type="submit">
+								Request
+							</button>
+						</form>
 						<hr/>
 						<div>
 							Click the button <b>Discard</b> to discard the registered parcel
@@ -458,9 +505,18 @@ class Trader extends Component {
 							Click the button <b>Grant</b> to grant a data parcel request on
 							behalf of the <b>seller</b>.
 						</div>
-						<button type="button" onClick={this.props.onGrant}>
-							Grant
-						</button>
+						<form onSubmit={this.handleGrantSubmit}>
+							Key custody:&nbsp;
+							<input
+								type="text"
+								name="custody"
+								value={this.state.custodyInput}
+								onChange={this.handleGrantChange}
+							/>
+							<button type="submit">
+								Grant
+							</button>
+						</form>
 						<hr/>
 						<div>
 							Click the button <b>Cancel</b> to cancel the parcel request on
