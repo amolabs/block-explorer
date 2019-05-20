@@ -16,10 +16,16 @@ export const TxBody = ({tx}) => {
 			return (<TxRetract txBody={tx.payload} />);
 		case 'register':
 			return (<TxRegister txBody={tx.payload} />);
+		case 'discard':
+			return (<TxDiscard txBody={tx.payload} />);
 		case 'request':
 			return (<TxRequest txBody={tx.payload} />);
+		case 'cancel':
+			return (<TxCancel txBody={tx.payload} />);
 		case 'grant':
 			return (<TxGrant txBody={tx.payload} />);
+		case 'revoke':
+			return (<TxRevoke txBody={tx.payload} />);
 		default:
 			return (<div>Unknown transaction type</div>);
 	}
@@ -79,11 +85,27 @@ const TxRegister = ({txBody}) => {
 	);
 }
 
+const TxDiscard = ({txBody}) => {
+	return (
+		<div>
+			<div>Parcel: {parcelLink(txBody.target)}</div>
+		</div>
+	);
+}
+
 const TxRequest = ({txBody}) => {
 	return (
 		<div>
 			<div>Parcel: {parcelLink(txBody.target)}</div>
 			<div>Payment: {txBody.payment}</div>
+		</div>
+	);
+}
+
+const TxCancel = ({txBody}) => {
+	return (
+		<div>
+			<div>Parcel: {parcelLink(txBody.target)}</div>
 		</div>
 	);
 }
@@ -94,6 +116,15 @@ const TxGrant = ({txBody}) => {
 			<div>Parcel: {parcelLink(txBody.target)}</div>
 			<div>Grantee: {accountLink(txBody.grantee)}</div>
 			<div>Key Custody: {txBody.custody}</div>
+		</div>
+	);
+}
+
+const TxRevoke = ({txBody}) => {
+	return (
+		<div>
+			<div>Parcel: {parcelLink(txBody.target)}</div>
+			<div>Grantee: {accountLink(txBody.grantee)}</div>
 		</div>
 	);
 }

@@ -111,8 +111,10 @@ class TxDetail extends Component {
 				<KeyValueRow k="Position" v={position} />
 				<KeyValueRow k="Sender" v={sender} />
 				<KeyValueRow k="Nonce" v={tx.nonce} />
+				<hr/>
 				<KeyValueRow k="Type" v={tx.type} />
 				<TxBody tx={tx} />
+				<hr/>
 				<KeyValueRow k="Pubkey" v={tx.pubkey} />
 				<KeyValueRow k="Signature" v={tx.sigBytes} />
 				<KeyValueRow k="Verify" v={valid?"valid":"invalid"} />

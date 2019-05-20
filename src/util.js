@@ -47,7 +47,7 @@ export class TextInput extends Component {
 }
 
 export const KeyValueRow = ({ k, v }) => {
-	return ( <p> {k} : {v} </p> );
+	return ( <div> {k} : {v} </div> );
 };
 
 export const blockLink = (height) => {
