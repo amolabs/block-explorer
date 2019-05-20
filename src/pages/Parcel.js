@@ -57,7 +57,7 @@ class ParcelDetail extends Component {
 		if (this.props.parcelID) {
 			fetchParcel(this.props.parcelID,
 				result => {
-					this.setState({ parcel: result });
+					this.setState({ parcel: result?result:{} });
 				}
 			);
 		} else {
