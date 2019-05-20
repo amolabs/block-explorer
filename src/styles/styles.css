@@ -137,3 +137,8 @@
 .gray {
 	color: gray;
 }
+
+.shallow {
+	margin-top: .2em;
+	margin-bottom: .2em;
+}

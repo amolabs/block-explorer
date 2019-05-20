@@ -356,20 +356,14 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 						}
 					/>
 				</div>
-				{parcel.owner?(<div>
-					<hr/>
-					<div>Owner: {parcel.owner}</div>
-				</div>):(<div/>)}
-				{parcel.buyer?(<div>
-					<hr/>
-					<div>Buyer: {parcel.buyer}</div>
-					<div>Pledged payment: {parcel.payment}</div>
-				</div>):(<div/>)}
-				{parcel.grant?(<div>
-					<hr/>
-					<div>Grant: {parcel.grant}</div>
-					<div>Key custody: {parcel.buyerCustody}</div>
-				</div>):(<div/>)}
+				<hr className="shallow"/>
+				<div>Owner: {parcel.owner}</div>
+				<hr className="shallow"/>
+				<div>Buyer: {parcel.buyer}</div>
+				<div>Pledged payment: {parcel.payment}</div>
+				<hr className="shallow"/>
+				<div>Grant: {parcel.grant}</div>
+				<div>Key custody: {parcel.buyerCustody}</div>
 			</div>
 		</div>
 	);
@@ -487,7 +481,7 @@ class Trader extends Component {
 								Request
 							</button>
 						</form>
-						<hr/>
+						<hr className="shallow"/>
 						<div>
 							Click the button <b>Discard</b> to discard the registered parcel
 							on behalf of the <b>seller</b>.
@@ -517,7 +511,7 @@ class Trader extends Component {
 								Grant
 							</button>
 						</form>
-						<hr/>
+						<hr className="shallow"/>
 						<div>
 							Click the button <b>Cancel</b> to cancel the parcel request on
 							behalf of the <b>buyer</b>.
