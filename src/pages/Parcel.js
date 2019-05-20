@@ -1,8 +1,9 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import { TxBriefList } from '../components/Tx';
 import { TextInput, KeyValueRow, accountLink } from '../util';
-import { fetchParcel } from '../rpc';
+import { fetchParcel, fetchTxsByParcel } from '../rpc';
 
 class Parcel extends Component {
 	state = {
@@ -75,6 +76,40 @@ class ParcelDetail extends Component {
 				<KeyValueRow k="Parcel ID" v={parcelIDAlt} />
 				<KeyValueRow k="Owner" v={accountLink(parcel.owner)} />
 				<KeyValueRow k="Owner Key" v={parcel.custody} />
+				<Txs parcel={this.props.parcelID}/>
+			</div>
+		);
+	}
+}
+
+class Txs extends Component {
+	state = { txs: [] };
+
+	componentDidMount() {
+		this.updateTxs();
+	}
+
+	componentDidUpdate(prevProps) {
+		if (this.props.parcel !== prevProps.parcel) {
+			this.updateTxs();
+		}
+	}
+
+	updateTxs = () => {
+		if (this.props.parcel) {
+			fetchTxsByParcel(this.props.parcel,
+				result => { this.setState({ txs: result }); }
+			);
+		} else {
+			this.setState({ txs: [] });
+		}
+	};
+
+	// TODO: pagination
+	render() {
+		return (
+			<div>Tx list related to this parcel ({this.state.txs.length} transactions):
+				<TxBriefList txs={this.state.txs}/>
 			</div>
 		);
 	}

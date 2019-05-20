@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { TxBriefList } from '../components/Tx';
 import { TextInput, KeyValueRow } from '../util';
-import { fetchBalance, fetchStake, fetchAccountTxs } from '../rpc';
+import { fetchBalance, fetchStake, fetchTxsByAccount } from '../rpc';
 
 class Account extends Component {
 	state = {
@@ -126,7 +126,7 @@ class Txs extends Component {
 
 	updateTxs = () => {
 		if (this.props.address) {
-			fetchAccountTxs(this.props.address,
+			fetchTxsByAccount(this.props.address,
 				result => { this.setState({ txs: result }); }
 			);
 		} else {

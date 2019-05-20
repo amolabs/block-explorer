@@ -171,8 +171,20 @@ export function fetchRecentTxs(callback) {
 }
 
 // TODO: pagination
-export function fetchAccountTxs(address, callback) {
+export function fetchTxsByAccount(address, callback) {
 	axios.get(`${httpURL}/tx_search?query="tx.sender='${address}'"`).then(
+		res => {
+			callback(res.data.result.txs.map(tx => {
+				tx.tx = JSON.parse(atob(tx.tx))
+				return formatTx(tx);
+			}));
+		}
+	);
+}
+
+// TODO: pagination
+export function fetchTxsByParcel(parcel, callback) {
+	axios.get(`${httpURL}/tx_search?query="parcel.id='${parcel}'"`).then(
 		res => {
 			callback(res.data.result.txs.map(tx => {
 				tx.tx = JSON.parse(atob(tx.tx))
