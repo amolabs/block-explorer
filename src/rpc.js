@@ -1,6 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import axios from 'axios';
 import sha256 from 'sha256';
+import crypto from 'crypto';
 
 //const HOST = 'localhost:26657';
 //const HOST = '192.168.50.88:26657';
@@ -122,8 +123,8 @@ function formatTx(tmTx) {
 		height: tmTx.height,
 		index: tmTx.index,
 		txResult: tmTx.tx_result,
-		sender: tmTx.tx.sender,
 		type: tmTx.tx.type,
+		sender: tmTx.tx.sender,
 		nonce: tmTx.tx.nonce,
 		payload: tmTx.tx.payload,
 		pubkey: tmTx.tx.signature.pubkey,
@@ -131,6 +132,7 @@ function formatTx(tmTx) {
 	};
 }
 
+// TODO: signature and pubkey
 export function fetchTx(hash, callback) {
 	axios.get(`${httpURL}/tx?hash=0x${hash}`).then(
 		res => {
@@ -138,7 +140,7 @@ export function fetchTx(hash, callback) {
 				callback({});
 			} else {
 				var tmTx = res.data.result;
-				tmTx.tx = JSON.parse(atob(res.data.result.tx));
+				tmTx.tx = JSON.parse(atob(tmTx.tx));
 				callback(formatTx(tmTx));
 			}
 		}
@@ -196,50 +198,197 @@ export function abciQuery(type, params, onSuccess, onError) {
 
 export function fetchBalance(address, callback) {
 	abciQuery('balance', address,
-		res => { callback(parseBalance(res)); },
+		res => { callback(JSON.parse(atob(res))); },
 		err => { callback(0); }
 	);
 }
 
 export function fetchStake(address, callback) {
 	abciQuery('stake', address,
-		res => { callback(parseStake(res)); },
-		err => { callback(0); } // TODO: check this
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); }
 	);
 }
 
 export function fetchParcel(id, callback) {
 	abciQuery('parcel', id,
-		res => { callback(parseParcel(res)); },
-		err => { callback(0); } // TODO: check this
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); }
 	);
 }
 
-function parseBalance(result) {
-	return JSON.parse(atob(result));
+export function fetchRequest(buyer, target, callback) {
+	abciQuery('request', {buyer: buyer, target: target},
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); },
+	);
 }
 
-function parseStake(result) {
-	var parsed = JSON.parse(atob(result));
-	if (!parsed) parsed = {amount:0,validator:[]};
-	const stake = {
-		amount: parsed.amount,
-		validator: bytes2hex(parsed.validator),
+export function fetchUsage(buyer, target, callback) {
+	abciQuery('usage', {buyer: buyer, target: target},
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); },
+	);
+}
+
+//////// send tx rpc
+
+function sendTx(tx, callback, errCallback) {
+	var escaped = tx.replace(/"/g, '\\"');
+	axios.post(`${httpURL}/broadcast_tx_commit?tx="${escaped}"`)
+		.then(res => {
+			if (res.data.error) {
+				// tendermint error
+				errCallback(res.data.error);
+			} else if (res.data.result.check_tx.code > 0) {
+				// abci check_tx error
+				errCallback({
+					// TODO: human readable error reason
+					message: 'abci error code '+res.data.result.check_tx.code,
+					data: null,
+				});
+			} else if (res.data.result.deliver_tx.code > 0) {
+				// abci deliver_tx error
+				errCallback({
+					// TODO: human readable error reason
+					message: 'abci error code '+res.data.result.deliver_tx.code,
+					data: null,
+				});
+			} else {
+				callback(res.data);
+			}
+		});
+}
+
+function signTx(tx, key) {
+	const sig = key.sign(sha256(JSON.stringify(tx)));
+	const r = ('0000'+sig.r.toString('hex')).slice(-64); // fail-safe
+	const s = ('0000'+sig.s.toString('hex')).slice(-64); // fail-safe
+
+	tx.signature = {
+		pubkey: key.getPublic().encode('hex'),
+		sig_bytes: r + s,
 	};
-	return stake
+
+	return tx;
 }
 
-function parseParcel(result) {
-	var parsed = JSON.parse(atob(result));
-	if (!parsed) parsed = { owner: null, custody: [] };
-	const parcel = {
-		owner: parsed.owner,
-		custody: parsed.custody, // TODO: byte array
+export function registerParcel(parcel, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'register',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+			custody: parcel.custody.toUpperCase(),
+		},
 	};
-	return parcel;
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
 }
 
-function bytes2hex(bytes) {
-	return bytes.map(b => {return ('0'+b.toString(16)).slice(-2);}).join('');
+export function discardParcel(parcel, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'discard',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
+export function requestParcel(parcel, payment, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'request',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+			payment: payment,
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
+export function cancelRequest(parcel, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'cancel',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
+export function grantParcel(parcel, grantee, custody, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'grant',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+			grantee: grantee.address.toUpperCase(),
+			custody: custody.toUpperCase(),
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
+export function revokeGrant(parcel, grantee, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'revoke',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			target: parcel.id.toUpperCase(),
+			grantee: grantee.address.toUpperCase(),
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
 }
 

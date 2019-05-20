@@ -103,7 +103,8 @@ class Stake extends Component {
 	};
 
 	render() {
-		const stake = this.state.stake;
+		var stake = this.state.stake;
+		if (!stake) stake = { amount: 0 };
 		const desc = stake.amount
 			+ (stake.validator ? (' for validator ' + stake.validator) : '');
 		return ( <KeyValueRow k="Stake" v={desc}/> );
