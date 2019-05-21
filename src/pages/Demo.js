@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { ec as EC } from 'elliptic';
 import sha256 from 'sha256';
 import { RIEInput, RIETextArea } from 'riek';
+import { MdAutorenew } from 'react-icons/md';
 import * as rpc from '../rpc';
 
 class Demo extends Component {
@@ -235,7 +236,16 @@ class Demo extends Component {
 	render() {
 		return (
 			<div className="container">
-				<div className="container">Demo main. Some descriptions here.</div>
+				<div className="container">
+					Demo main. Some descriptions here.
+					<button
+						type="button"
+						onClick={()=>{this.setState({remoteUpdate:true});}}
+						style={{cursor:"pointer",border:"0px"}}
+					>
+						<MdAutorenew/>
+					</button>
+				</div>
 				<StepGuide state={this.state} />
 				<div className="container row">
 					<div className="col-md-6">
