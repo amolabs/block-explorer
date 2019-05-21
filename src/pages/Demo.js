@@ -553,17 +553,25 @@ class Trader extends Component {
 const StepGuide = ({state}) => {
 	var msg;
 	if (!state.seller.address) {
-		msg = "Generate a seller account by setting a seed string. The generated key will not be shown in this screen, and stored in the browser's memory only. So, if you leave this screen the generated key shall be discarded. In order to use the same key in the future, you need to remember your seed strings.";
+		msg = (<span>Generate a seller account by setting a seed string. The generated key will not be shown in this screen, and stored in the browser's memory only. So, if you leave this screen the generated key shall be discarded. In order to use the same key in the future, <b>you need to remember your seed strings</b>.</span>);
 	} else if (!state.buyer.address) {
-		msg = "Generate a buyer account by setting a seed string. The generated key will not be shown in this screen, and stored in the browser's memory only. So, if you leave this screen the generated key shall be discarded. In order to use the same key in the future, you need to remember your seed strings.";
+		msg = (<span>Generate a buyer account by setting a seed string. The generated key will not be shown in this screen, and stored in the browser's memory only. So, if you leave this screen the generated key shall be discarded. In order to use the same key in the future, <b>you need to remember your seed strings</b>.</span>);
 	} else if (!state.parcel.id) {
-		msg = "Enter data parcel ID as a hexadecimal string. A parcel ID is used to identify and merchadize any data item in AMO blockchain environment.";
+		msg = (<span>Enter data parcel ID as a <b>hexadecimal</b> string (without <code>0x</code> prefix). A parcel ID is used to identify and merchadize any data item in AMO ecosystem.</span>);
 	} else if (!state.parcel.custody) {
-		msg = "Enter key custody information of this data parcel as a dexadecimal string. This custody is used to store owner's data encryption key.";
+		msg = (<span>Enter key custody information of this data parcel as a <b>dexadecimal</b> string. This custody is used to store owner's data encryption key. Encryption feature is not ready for this demo page, so key custody has no meaning for now. Just type in any hexadecimal string.</span>);
 	} else if (!state.parcel.extra) {
-		msg = "Enter some extra information of this data parcel. You may enter any string here.";
+		msg = (<span>Enter some extra information of this data parcel. This extra information would be used to decide the lifetime of the data. But this feature is not ready for this demo page, so you may enter any string here.</span>);
+	} else if (state.buyer.balance === 0 || state.buyer.balance === '0') {
+		msg = (<span>Now you need to acquire some AMO coins for the buyer to perform actual data trading. Open a <b>new</b> browser window or tab and visit the <a href="https://testnet.amolabs.io">faucet site</a> and acquire some.</span>);
+	} else if (!state.parcel.owner) {
+		msg = (<span>Everything has been setup and you can try some trading actions now. First, you need to send a <b>Register</b> transaction to register your demo parcel on AMO blockchain. This step is essential for other users to request your data. Click the <b>Register</b> button in the <b>Trading demo</b> box.</span>);
+	} else if (!state.parcel.buyer && !state.parcel.grant) {
+		msg = (<span>You've piched your first data on AMO blockchain. Good. Now, perform some action on behalf of a buyer. A buyer can send a <b>Request</b> transaction to inform the owner(<em>seller account</em>) of a data parcel that he/she wants to use the data. This action requires some coins as a payment to the data owner. Yes, this is a kind of escrow mechanism. You need to deposit the money first, and you will see that buyer's balance is reduced by the payment amount. Click the <b>Request</b> button in the <b>Trading demo</b> box. <b>Alternatively</b>, you can click the <b>Discard</b> button. In that case, data parcel in question will be discarded and AMO blockchain will forget about it.</span>);
+	} else if (!state.parcel.grant) {
+		msg = (<span>Now you have a data, and both of a seller and a buyer. And the buyer wants to buy the permission to use the data with some money as a pledged payment. You can click the <b>Grant</b> button to grant the <em>request</em> on behalf of the seller, and the seller will collect the pledged payment. When you grant a request, you need to specify a key custody. This key custody is not the one you entered in the <b>Data parcel</b> box. A key custody carried with the Grant transaction is for the buyer. Typically, it would be a data encryption key <em>encrypted</em> with the buyer's public key. The encryption feature is not ready yet, so you can enter any hexadecimal string here.</span>);
 	} else {
-		msg = "Now you need to acquire some AMO coins for actual data trading.";
+		msg = (<span>Have you noticed that the seller's balance was increased by the buyer's pledged payment? Here ends the basic cycle of the data trading.</span>);
 	}
 
 	return (
