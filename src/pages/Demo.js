@@ -7,9 +7,9 @@ import * as rpc from '../rpc';
 
 class Demo extends Component {
 	state = {
-		seller: { seed: null, address: null, ecKey: null, balance: 0, },
-		buyer: { seed: null, address: null, ecKey: null, balance: 0, },
-		parcel: { id: null, custody: null, extra: null, owner: null, buyer: null, grant: null },
+		seller: {},
+		buyer: {},
+		parcel: {},
 		action: null,
 		remoteUpdate: false,
 	};
@@ -255,6 +255,15 @@ class Demo extends Component {
 							onInputCustody={this.setKeyCustody}
 							onInputExtra={this.setExtra}
 						/>
+						<div className="container">
+							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
+							item</span> to edit. Seed input can be any string. Parcel ID and
+							key custody must be hexadecimal strings. Since extra info does
+							nothing import for now, just input anything you want.
+						</div>
+					</div>
+					<div className="col-md-6">
+						<ConsoleGuide state={this.state} />
 						<Trader
 							seller={this.state.seller}
 							buyer={this.state.buyer}
@@ -266,15 +275,6 @@ class Demo extends Component {
 							onGrant={this.sendGrant}
 							onRevoke={this.sendRevoke}
 						/>
-						<div className="container">
-							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
-							item</span> to edit. Seed input can be any string. Parcel ID and
-							key custody must be hexadecimal strings. Since extra info does
-							nothing import for now, just input anything you want.
-						</div>
-					</div>
-					<div className="col-md-6">
-						<ConsoleGuide state={this.state} />
 					</div>
 				</div>
 			</div>
