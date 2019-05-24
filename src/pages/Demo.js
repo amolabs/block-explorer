@@ -241,6 +241,10 @@ class Demo extends Component {
 			<div className="container">
 				<div className="container">
 					Demo main. Some descriptions here.
+				</div>
+				<StepGuide state={this.state} />
+				<div className="container">
+					Refresh
 					<button
 						type="button"
 						onClick={()=>{this.setState({remoteUpdate:true});}}
@@ -248,8 +252,8 @@ class Demo extends Component {
 					>
 						<MdAutorenew/>
 					</button>
+					(Don't reload the page. Click the refresh icon.)
 				</div>
-				<StepGuide state={this.state} />
 				<div className="container row">
 					<div className="col-md-6">
 						<DemoAccount
