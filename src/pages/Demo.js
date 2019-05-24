@@ -6,6 +6,9 @@ import { RIEInput, RIETextArea } from 'riek';
 import { MdAutorenew } from 'react-icons/md';
 import * as rpc from '../rpc';
 
+// for faucet ask
+import axios from 'axios';
+
 class Demo extends Component {
 	state = {
 		seller: {},
@@ -292,9 +295,38 @@ class Demo extends Component {
 	}
 }
 
+function askForCoin(ecKey) {
+	const address = sha256(ecKey.getPublic().encode()).slice(0,40);
+	//console.log('ask for coin with the address:', address);
+	const reqBody = JSON.stringify({ recp: address });
+	axios.post(
+		'http://139.162.116.176:2000', reqBody,
+		{
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Headers': '*',
+			}
+		}
+	)
+		.then(res => {
+			//console.log('res =', res);
+		});
+}
+
 const DemoAccount = ({heading, account, onInputSeed}) => {
+	var faucetLink = (<div className="container"></div>);
 	if (!account) { // this is for a fail-safe. not needed really
 		account = {seed: null, address: null, ecKey: null, balance: 0};
+	}
+	// if the balance is less than one AMO
+	if (account.address && account.balance === 0) {
+		faucetLink = (
+			<div className="container">
+				<button onClick={()=>{askForCoin(account.ecKey);}}>
+					Ask for coin
+				</button>
+			</div>
+		);
 	}
 	return (
 		<div className="container round-box">
@@ -321,6 +353,7 @@ const DemoAccount = ({heading, account, onInputSeed}) => {
 			<div className="container">
 				Balance: {account.balance}
 			</div>
+			{faucetLink}
 		</div>
 	);
 };
