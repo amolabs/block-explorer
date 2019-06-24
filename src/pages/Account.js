@@ -46,7 +46,7 @@ const AccountDetail = ({address}) => {
 			<KeyValueRow k="Address" v={addressAlt} />
 			<Balance address={address}/>
 			<Stake address={address}/>
-			<Txs address={address}/>
+			<AccountTxs address={address}/>
 		</div>
 	);
 };
@@ -111,7 +111,7 @@ class Stake extends Component {
 	}
 }
 
-class Txs extends Component {
+class AccountTxs extends Component {
 	state = { txs: [] };
 
 	componentDidMount() {
