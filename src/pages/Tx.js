@@ -5,7 +5,7 @@ import { TxBody } from '../components/Tx';
 import { TextInput, KeyValueRow, accountLink, blockLink } from '../util';
 import { fetchTx } from '../rpc';
 import { ec as EC } from 'elliptic';
-import sha256 from 'sha256';
+import sha256 from 'js-sha256';
 
 class Tx extends Component {
 	state = {
