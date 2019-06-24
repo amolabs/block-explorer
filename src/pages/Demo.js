@@ -1,7 +1,7 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React, { Component } from 'react';
 import { ec as EC } from 'elliptic';
-import sha256 from 'sha256';
+import sha256 from 'js-sha256';
 import { RIEInput, RIETextArea } from 'riek';
 import { MdAutorenew } from 'react-icons/md';
 import * as rpc from '../rpc';

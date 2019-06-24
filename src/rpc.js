@@ -1,6 +1,6 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import axios from 'axios';
-import sha256 from 'sha256';
+import sha256 from 'js-sha256';
 import crypto from 'crypto';
 
 //const HOST = 'localhost:26657';
