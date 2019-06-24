@@ -24,7 +24,7 @@ class Parcel extends Component {
 		}
 	}
 
-	updateParcelID = (id) => {
+	applyParcelID = (id) => {
 		this.setState({ parcelID: id });
 		this.props.history.push('/parcel/'+id);
 	}
@@ -35,8 +35,12 @@ class Parcel extends Component {
 				<TextInput desc="Parcel ID" name="parcelID"
 					value={this.state.parcelID}
 					button="Query"
-					onSubmit={this.updateParcelID}/>
-				<ParcelDetail parcelID={this.state.parcelID}/>
+					onSubmit={this.applyParcelID}
+				/>
+				<ParcelDetail
+					parcelID={this.state.parcelID}
+					onChangeID={this.applyParcelID}
+				/>
 			</div>
 		);
 	}
@@ -83,7 +87,10 @@ class ParcelDetail extends Component {
 				<KeyValueRow k="Parcel ID" v={parcelIDAlt} />
 				<KeyValueRow k="Owner" v={accountLink(parcel.owner)} />
 				<KeyValueRow k="Owner Key Custody" v={parcel.custody} />
-				<ParcelPayload parcelID={this.props.parcelID}/>
+				<ParcelPayload
+					parcelID={this.props.parcelID}
+					onChangeID={this.props.onChangeID}
+				/>
 				<ParcelTxs parcelID={this.props.parcelID}/>
 			</div>
 		);
@@ -158,7 +165,7 @@ class ParcelPayload extends Component {
 				Body: content,
 			}, (err, data) => {
 				if (err) console.log(err);
-				else console.log('uploaded:', data);
+				else this.props.onChangeID(hash);
 			});
 		}
 	};
@@ -173,7 +180,11 @@ class ParcelPayload extends Component {
 
 		var renderedBody;
 		if (this.state.payload) {
-			renderedBody = (<div>Body: {payload.Body.slice(0,256).toString()}</div>);
+			renderedBody = (<div>Body:
+				<div className="container">
+					{payload.Body.slice(0,256).toString()}
+				</div>
+			</div>);
 		} else if (!this.props.parcelID) {
 			renderedBody = (<UploadForm doUpload={this.uploadPayload}/>);
 		} else {
@@ -185,7 +196,7 @@ class ParcelPayload extends Component {
 				Payload: {this.state.payloadAlt}
 				<div className="container">
 					<div>ContentType: {payload.ContentType}</div>
-					<div>{renderedBody}</div>
+					{renderedBody}
 				</div>
 			</div>
 		);
@@ -195,11 +206,12 @@ class ParcelPayload extends Component {
 class UploadForm extends Component {
 	state = {
 		content: null,
+		uploading: false,
 	};
 
 	handleChange = (e) => {
 		const rd = new FileReader();
-		rd.onloadend = () => {
+		rd.onload = () => {
 			var fileHash = sha256(rd.result);
 			const blob = new Blob([rd.result]); // weird
 			this.setState({content: blob, fileHash: fileHash});
@@ -208,10 +220,12 @@ class UploadForm extends Component {
 	};
 
 	handleSubmit = () => {
+		this.setState({uploading: true});
 		this.props.doUpload(this.state.fileHash, this.state.content);
 	};
 
 	render() {
+		const label = this.state.uploading?'Uploading...':'Upload';
 		return (
 			<div style={{border:'2px solid lightgrey'}}>
 				<div>
@@ -226,9 +240,9 @@ class UploadForm extends Component {
 					<button
 						type="button"
 						onClick={this.handleSubmit}
-						disabled={!this.state.content}
+						disabled={!this.state.content||this.state.uploading}
 					>
-						Upload
+						{label}
 					</button>
 				</div>
 			</div>
