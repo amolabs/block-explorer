@@ -340,10 +340,10 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 	}
 	var heading = 'Account';
 	var seedcookie;
-	if (which == 'seller') {
+	if (which === 'seller') {
 		heading = 'Seller account';
 		seedcookie = cookies.seedseller;
-	} else if (which == 'buyer') {
+	} else if (which === 'buyer') {
 		heading = 'Buyer account';
 		seedcookie = cookies.seedbuyer;
 	}
