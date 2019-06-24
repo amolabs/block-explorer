@@ -5,6 +5,8 @@ import sha256 from 'js-sha256';
 import { RIEInput, RIETextArea } from 'riek';
 import { MdAutorenew } from 'react-icons/md';
 import * as rpc from '../rpc';
+import { Link } from 'react-router-dom'
+import { useCookies } from 'react-cookie';
 
 // for faucet ask
 import axios from 'axios';
@@ -259,12 +261,12 @@ class Demo extends Component {
 				<div className="container row">
 					<div className="col-md-6">
 						<DemoAccount
-							heading='Seller account'
+							which='seller'
 							account={this.state.seller}
 							onInputSeed={this.setSellerAddress}
 						/>
 						<DemoAccount
-							heading='Buyer account'
+							which='buyer'
 							account={this.state.buyer}
 							onInputSeed={this.setBuyerAddress}
 						/>
@@ -319,7 +321,9 @@ function askForCoin(ecKey) {
 		});
 }
 
-const DemoAccount = ({heading, account, onInputSeed}) => {
+const DemoAccount = ({which, account, onInputSeed}) => {
+	const [cookies, setCookie] = useCookies([ 'seedseller', 'seedbuyer' ]);
+
 	var faucetLink = (<div className="container"></div>);
 	if (!account) { // this is for a fail-safe. not needed really
 		account = {seed: null, address: null, ecKey: null, balance: 0};
@@ -334,15 +338,30 @@ const DemoAccount = ({heading, account, onInputSeed}) => {
 			</div>
 		);
 	}
+	var heading = 'Account';
+	var seedcookie;
+	if (which == 'seller') {
+		heading = 'Seller account';
+		seedcookie = cookies.seedseller;
+	} else if (which == 'buyer') {
+		heading = 'Buyer account';
+		seedcookie = cookies.seedbuyer;
+	}
+	if (!account.seed) account.seed = seedcookie;
+
 	return (
 		<div className="container round-box">
 			<b>{heading}</b>
+			<div>seed from cookies: {seedcookie}</div>
 			<div className="container">
 				Seed:&nbsp;
 				<RIEInput
 					value={account.seed?account.seed:'input seed string and press enter'}
 					propName="seed"
-					change={(prop) => {onInputSeed(prop.seed);}}
+					change={(prop) => {
+						setCookie('seed'+which, prop.seed);
+						onInputSeed(prop.seed);
+					}}
 					className="rie-inline"
 					defaultProps={
 						account.seed?{}:{style:{fontStyle:"italic",color:"gray"}}
@@ -365,18 +384,30 @@ const DemoAccount = ({heading, account, onInputSeed}) => {
 };
 
 const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => {
+	const [cookies, setCookie] = useCookies([ 'parcelid' ]);
+
+	var parcelLink;
 	if (!parcel) {
 		parcel = {id: null, owner: null, custody: null, extra: null, buyer: null};
 	}
+
+	if (!parcel.id) parcel.id = cookies.parcelid;
+	if (parcel.id) {
+		parcelLink = (<Link to={'/parcel/' + parcel.id}>parcel page</Link>);
+	}
+
 	return (
 		<div className="container round-box">
-			<b>Data parcel</b>
+			<b>Data parcel</b> {parcelLink}
 			<div className="container">
 				<div>Parcel ID:&nbsp;
 					<RIEInput
 						value={parcel.id?parcel.id:'input id and press enter'}
 						propName="id"
-						change={(prop) => {onInputParcelId(prop.id);}}
+						change={(prop) => {
+							setCookie('parcelid', prop.id);
+							onInputParcelId(prop.id);
+						}}
 						className="rie-inline"
 						defaultProps={
 							parcel.id?{}:{style:{fontStyle:"italic",color:"gray"}}
@@ -602,9 +633,9 @@ class Trader extends Component {
 const StepGuide = ({state}) => {
 	var msg;
 	if (!state.seller.address) {
-		msg = (<span>Generate a seller account by setting a seed string. The generated key will not be shown in this screen, and stored in the browser's memory only. So, if you leave this screen the generated key shall be discarded. In order to use the same key in the future, <b>you need to remember your seed strings</b>.</span>);
+		msg = (<span>Generate a seller account by setting a seed string. The generated key will not be shown on the screen, and stored in the browser's memory only. The seed string used to generate the key pair will be stored as a <b>browser cookie</b>. Of course, you can remember your seed string and reuse that in the future.</span>);
 	} else if (!state.buyer.address) {
-		msg = (<span>Generate a buyer account by setting a seed string. The generated key will not be shown in this screen, and stored in the browser's memory only. So, if you leave this screen the generated key shall be discarded. In order to use the same key in the future, <b>you need to remember your seed strings</b>.</span>);
+		msg = (<span>Generate a buyer account by setting a seed string. The generated key will not be shown on the screen, and stored in the browser's memory only. The seed string used to generate the key pair will be stored as a <b>browser cookie</b>. Of course, you can remember your seed string and reuse that in the future.</span>);
 	} else if (!state.parcel.id) {
 		msg = (<span>Enter data parcel ID as a <b>hexadecimal</b> string (without <code>0x</code> prefix). A parcel ID is used to identify and merchadize any data item in AMO ecosystem.</span>);
 	} else if (!state.parcel.custody) {
