@@ -6,6 +6,8 @@ import { TextInput, KeyValueRow, accountLink } from '../util';
 import { fetchParcel, fetchTxsByParcel } from '../rpc';
 import AWS from 'aws-sdk';
 import sha256 from 'js-sha256';
+import { RIEInput } from 'riek';
+import aes from 'browserify-aes';
 
 const s3endpoint = 'http://172.105.221.117:7480';
 const s3accessKey = '65IDDDG7C7UB1NAIJM7Z';
@@ -206,22 +208,55 @@ class ParcelPayload extends Component {
 class UploadForm extends Component {
 	state = {
 		content: null,
+		fileHash: null,
 		uploading: false,
+		encKey: null,
+		encrypted: null,
+		encHash: null,
 	};
 
-	handleChange = (e) => {
+	componentDidUpdate(prevProps, prevState) {
+		if (prevState.encKey !== this.state.encKey
+			|| prevState.content !== this.state.content) {
+			this.doEncrypt();
+		}
+	}
+
+	doEncrypt = () => {
+		if (this.state.encKey && this.state.content) {
+			console.log('do encrypt');
+			const cipher = aes.createCipheriv(
+				'AES-256-CTR',
+				this.state.encKey,
+				Buffer(16, 0)
+			);
+
+			let chunk = cipher.update(this.state.content);
+			let final = cipher.final();
+			let encrypted = Buffer.concat([chunk, final]);
+			let encHash = sha256(encrypted);
+			console.log('content len =', this.state.content.length);
+			console.log('encrypt len =', encrypted.length);
+			this.setState({encrypted: encrypted, encHash: encHash});
+		}
+	};
+
+	handleFileChange = (e) => {
 		const rd = new FileReader();
 		rd.onload = () => {
 			var fileHash = sha256(rd.result);
-			const blob = new Blob([rd.result]); // weird
-			this.setState({content: blob, fileHash: fileHash});
+			this.setState({content: Buffer(rd.result), fileHash: fileHash});
 		};
 		rd.readAsArrayBuffer(e.target.files[0]);
 	};
 
 	handleSubmit = () => {
 		this.setState({uploading: true});
-		this.props.doUpload(this.state.fileHash, this.state.content);
+		if (this.state.encrypted) {
+			this.props.doUpload(this.state.encHash, this.state.encrypted);
+		} else if (this.state.content) {
+			this.props.doUpload(this.state.fileHash, this.state.content);
+		}
 	};
 
 	render() {
@@ -230,11 +265,27 @@ class UploadForm extends Component {
 			<div style={{border:'2px solid lightgrey'}}>
 				<div>
 					Select a file to upload:&nbsp;
-					<input type="file" onChange={this.handleChange}/>
+					<input type="file" onChange={this.handleFileChange}/>
 				</div>
 				<font color='red'>Don't upload any sensitive files</font>
 				<div>
 					File hash: {this.state.fileHash}
+				</div>
+				<RIEInput
+					className="rie-inline"
+					value={this.state.encKey?this.state.encKey.toString('hex'):'input encryption key as a hex-encoded string and press enter'}
+					propName="hexKey"
+					change={(prop) => {
+						const encKey = Buffer.alloc(32);
+						encKey.write(prop.hexKey, 'hex');
+						this.setState({encKey: encKey});
+					}}
+					defaultProps={
+						this.state.encKey?{}:{style:{fontStyle:"italic",color:"gray"}}
+					}
+				/>
+				<div>
+					Encrypted File hash: {this.state.encHash}
 				</div>
 				<div>
 					<button
