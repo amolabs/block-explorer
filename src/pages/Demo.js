@@ -265,26 +265,24 @@ class Demo extends Component {
 							account={this.state.seller}
 							onInputSeed={this.setSellerAddress}
 						/>
+					</div>
+					<div className="col-md-6">
 						<DemoAccount
 							which='buyer'
 							account={this.state.buyer}
 							onInputSeed={this.setBuyerAddress}
 						/>
+					</div>
+				</div>
+				<div className="container row">
+					<div className="col-md-12">
 						<DemoParcel
 							parcel={this.state.parcel}
+							owner={this.state.seller}
 							onInputParcelId={this.setParcelId}
 							onInputCustody={this.setKeyCustody}
 							onInputExtra={this.setExtra}
 						/>
-						<div className="container">
-							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
-							item</span> to edit. Seed input can be any string. Parcel ID and
-							key custody must be hexadecimal strings. Since extra info does
-							nothing import for now, just input anything you want.
-						</div>
-					</div>
-					<div className="col-md-6">
-						<ConsoleGuide state={this.state} />
 						<Trader
 							seller={this.state.seller}
 							buyer={this.state.buyer}
@@ -296,6 +294,12 @@ class Demo extends Component {
 							onGrant={this.sendGrant}
 							onRevoke={this.sendRevoke}
 						/>
+						<div className="container">
+							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
+							item</span> to edit. Seed input can be any string. Parcel ID and
+							key custody must be hexadecimal strings. Since extra info does
+							nothing import for now, just input anything you want.
+						</div>
 					</div>
 				</div>
 			</div>
@@ -352,7 +356,6 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 	return (
 		<div className="container round-box">
 			<b>{heading}</b>
-			<div>seed from cookies: {seedcookie}</div>
 			<div className="container">
 				Seed:&nbsp;
 				<RIEInput
@@ -383,7 +386,7 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 	);
 };
 
-const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => {
+const DemoParcel = ({parcel, owner, onInputParcelId, onInputCustody, onInputExtra}) => {
 	const [cookies, setCookie] = useCookies([ 'parcelid' ]);
 
 	var parcelLink;
