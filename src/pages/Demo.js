@@ -669,11 +669,9 @@ const StepGuide = ({state}) => {
 	} else if (!state.buyer.address) {
 		msg = (<span>Generate a buyer account by setting a seed string. The generated key will not be shown on the screen, and stored in the browser's memory only. The seed string used to generate the key pair will be stored as a <b>browser cookie</b>. Of course, you can remember your seed string and reuse that in the future.</span>);
 	} else if (!state.parcel.id) {
-		msg = (<span>Enter data parcel ID as a <b>hexadecimal</b> string (without <code>0x</code> prefix). A parcel ID is used to identify and merchadize any data item in AMO ecosystem.</span>);
+		msg = (<span>Enter data parcel ID as a <b>hexadecimal</b> string (without <code>0x</code> prefix). A parcel ID is used to identify and merchandize any data item in AMO ecosystem. You may go to the <b>Parcel</b> page to upload a file, or you may just use any random hex string here.</span>);
 	} else if (!state.parcel.custody) {
-		msg = (<span>Enter key custody information of this data parcel as a <b>dexadecimal</b> string. This custody is used to store owner's data encryption key. Encryption feature is not ready for this demo page, so key custody has no meaning for now. Just type in any hexadecimal string.</span>);
-	} else if (!state.parcel.extra) {
-		msg = (<span>Enter some extra information of this data parcel. This extra information would be used to decide the lifetime of the data. But this feature is not ready for this demo page, so you may enter any string here.</span>);
+		msg = (<span>Enter data encryption key used to encrypt a data parcel. This key may be the one you entered in the <b>Parcel</b> page, or any random hex string if you don't want to bother to upload a real file. This data encryption key shall be transformed into a <b>Owner's key custody</b> automatically. Owner's key custody shall be stored in the blockchain alongside a data parcel, and the owner can always get the key custody and extract a data encryption key.</span>);
 	} else if (state.buyer.balance === 0 || state.buyer.balance === '0') {
 		msg = (<span>Now you need to acquire some AMO coins for the buyer to perform actual data trading. Open a <b>new</b> browser window or tab and visit the <a href="https://testnet.amolabs.io">faucet site</a> and acquire some.</span>);
 	} else if (!state.parcel.owner) {
@@ -681,9 +679,9 @@ const StepGuide = ({state}) => {
 	} else if (!state.parcel.buyer && !state.parcel.grant) {
 		msg = (<span>You've piched your first data on AMO blockchain. Good. Now, perform some action on behalf of a buyer. A buyer can send a <b>Request</b> transaction to inform the owner(<em>seller account</em>) of a data parcel that he/she wants to use the data. This action requires some coins as a payment to the data owner. Yes, this is a kind of escrow mechanism. You need to deposit the money first, and you will see that buyer's balance is reduced by the payment amount. Click the <b>Request</b> button in the <b>Trading demo</b> box. <b>Alternatively</b>, you can click the <b>Discard</b> button. In that case, data parcel in question will be discarded and AMO blockchain will forget about it.</span>);
 	} else if (!state.parcel.grant) {
-		msg = (<span>Now you have a data, and both of a seller and a buyer. And the buyer wants to buy the permission to use the data with some money as a pledged payment. You can click the <b>Grant</b> button to grant the <em>request</em> on behalf of the seller, and the seller will collect the pledged payment. When you grant a request, you need to specify a key custody. This key custody is not the one you entered in the <b>Data parcel</b> box. A key custody carried with the Grant transaction is for the buyer. Typically, it would be a data encryption key <em>encrypted</em> with the buyer's public key. The encryption feature is not ready yet, so you can enter any hexadecimal string here.</span>);
+		msg = (<span>Now you have a data, and both of a seller and a buyer. And the buyer wants to buy the permission to use the data with some money as a pledged payment. You can click the <b>Grant</b> button to grant the <em>request</em> on behalf of the seller, and the seller will collect the pledged payment. When you grant a request, you need to specify a key custody. In real life, the data owner need to fetch owner's key custody of a parcel; decrypt it to extract a data encryptio key; and encrypt it again with the buyer's public key. However, in this demo, the program will do this for you.</span>);
 	} else {
-		msg = (<span>Have you noticed that the seller's balance was increased by the buyer's pledged payment? Here ends the basic cycle of the data trading.</span>);
+		msg = (<span>Have you noticed that the seller's balance was increased by the buyer's pledged payment? Here ends the basic cycle of the data trading. You may see the <b>restored encryption key</b> in the bottom of the <b>Data parcel</b> box. You can decrypt a data parcel body with this key after you download a data.</span>);
 	}
 
 	return (
