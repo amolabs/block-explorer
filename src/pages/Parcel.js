@@ -6,6 +6,8 @@ import { TextInput, KeyValueRow, accountLink } from '../util';
 import { fetchParcel, fetchTxsByParcel } from '../rpc';
 import AWS from 'aws-sdk';
 import sha256 from 'js-sha256';
+import { RIEInput } from 'riek';
+import aes from 'browserify-aes';
 
 const s3endpoint = 'http://172.105.221.117:7480';
 const s3accessKey = '65IDDDG7C7UB1NAIJM7Z';
@@ -102,6 +104,8 @@ class ParcelPayload extends Component {
 		payload: null,
 		payloadAlt: null,
 		s3online: false,
+		encKey: null,
+		decrypted: null,
 	};
 
 	componentDidMount() {
@@ -126,13 +130,19 @@ class ParcelPayload extends Component {
 		{
 			this.updatePayload(this.props.parcelID);
 		}
+
+		if (prevState.encKey !== this.state.encKey
+			|| this.state.payload !== prevState.payload) {
+			this.doDecrypt();
+		}
 	}
 
 	updatePayload = (id) => {
 		if (!id) {
 			this.setState({
 				payload: null,
-				payloadAlt: null
+				payloadAlt: null,
+				decrypted: null,
 			});
 			return;
 		}
@@ -145,12 +155,14 @@ class ParcelPayload extends Component {
 				if (err) {
 					this.setState({
 						payload: null,
-						payloadAlt: 'failed to get data parcel payload'
+						payloadAlt: 'failed to get data parcel payload',
+						decrypted: null,
 					});
 				} else {
 					this.setState({
 						payload: data,
-						payloadAlt: null
+						payloadAlt: null,
+						decrypted: null,
 					});
 				}
 			});
@@ -170,6 +182,23 @@ class ParcelPayload extends Component {
 		}
 	};
 
+	doDecrypt = () => {
+		if (this.state.payload && this.state.payload.Body && this.state.encKey) {
+			console.log('do decrypt');
+			const cipher = aes.createDecipheriv(
+				'AES-256-CTR',
+				this.state.encKey,
+				Buffer(16, 0)
+			);
+
+			let chunk = cipher.update(this.state.payload.Body);
+			let final = cipher.final();
+			let decrypted = Buffer.concat([chunk, final]);
+
+			this.setState({ decrypted: decrypted });
+		}
+	};
+
 	render() {
 		var payload;
 		if (this.state.payload) {
@@ -179,10 +208,48 @@ class ParcelPayload extends Component {
 		}
 
 		var renderedBody;
-		if (this.state.payload) {
+		if (this.state.decrypted) {
 			renderedBody = (<div>Body:
 				<div className="container">
-					{payload.Body.slice(0,256).toString()}
+					<div>
+						{this.state.decrypted.slice(0,256).toString()}
+					</div>
+					<RIEInput
+						className="rie-inline"
+						value={this.state.encKey?this.state.encKey.toString('hex'):'input encryption key as a hex-encoded string and press enter'}
+						propName="hexKey"
+						change={(prop) => {
+							const encKey = Buffer.alloc(32);
+							encKey.write(prop.hexKey, 'hex');
+							this.setState({encKey: encKey});
+						}}
+						defaultProps={
+							this.state.encKey?{}:{style:{fontStyle:"italic",color:"gray"}}
+						}
+					/>
+				</div>
+			</div>
+			);
+		} else if (this.state.payload) {
+			// this.state.decrypted
+			renderedBody = (<div>Body:
+				<div className="container">
+					<div>
+						{payload.Body.slice(0,256).toString()}
+					</div>
+					<RIEInput
+						className="rie-inline"
+						value={this.state.encKey?this.state.encKey.toString('hex'):'input encryption key as a hex-encoded string and press enter'}
+						propName="hexKey"
+						change={(prop) => {
+							const encKey = Buffer.alloc(32);
+							encKey.write(prop.hexKey, 'hex');
+							this.setState({encKey: encKey});
+						}}
+						defaultProps={
+							this.state.encKey?{}:{style:{fontStyle:"italic",color:"gray"}}
+						}
+					/>
 				</div>
 			</div>);
 		} else if (!this.props.parcelID) {
@@ -206,35 +273,84 @@ class ParcelPayload extends Component {
 class UploadForm extends Component {
 	state = {
 		content: null,
+		fileHash: null,
 		uploading: false,
+		encKey: null,
+		encrypted: null,
+		encHash: null,
 	};
 
-	handleChange = (e) => {
+	componentDidUpdate(prevProps, prevState) {
+		if (prevState.encKey !== this.state.encKey
+			|| prevState.content !== this.state.content) {
+			this.doEncrypt();
+		}
+	}
+
+	doEncrypt = () => {
+		if (this.state.encKey && this.state.content) {
+			console.log('do encrypt');
+			const cipher = aes.createCipheriv(
+				'AES-256-CTR',
+				this.state.encKey,
+				Buffer(16, 0)
+			);
+
+			let chunk = cipher.update(this.state.content);
+			let final = cipher.final();
+			let encrypted = Buffer.concat([chunk, final]);
+			let encHash = sha256(encrypted);
+			console.log('content len =', this.state.content.length);
+			console.log('encrypt len =', encrypted.length);
+			this.setState({encrypted: encrypted, encHash: encHash});
+		}
+	};
+
+	handleFileChange = (e) => {
 		const rd = new FileReader();
 		rd.onload = () => {
 			var fileHash = sha256(rd.result);
-			const blob = new Blob([rd.result]); // weird
-			this.setState({content: blob, fileHash: fileHash});
+			this.setState({content: Buffer(rd.result), fileHash: fileHash});
 		};
 		rd.readAsArrayBuffer(e.target.files[0]);
 	};
 
 	handleSubmit = () => {
 		this.setState({uploading: true});
-		this.props.doUpload(this.state.fileHash, this.state.content);
+		if (this.state.encrypted) {
+			this.props.doUpload(this.state.encHash, this.state.encrypted);
+		} else if (this.state.content) {
+			this.props.doUpload(this.state.fileHash, this.state.content);
+		}
 	};
 
 	render() {
 		const label = this.state.uploading?'Uploading...':'Upload';
 		return (
-			<div style={{border:'2px solid lightgrey'}}>
+			<div>
 				<div>
 					Select a file to upload:&nbsp;
-					<input type="file" onChange={this.handleChange}/>
+					<input type="file" onChange={this.handleFileChange}/>
 				</div>
 				<font color='red'>Don't upload any sensitive files</font>
 				<div>
 					File hash: {this.state.fileHash}
+				</div>
+				<RIEInput
+					className="rie-inline"
+					value={this.state.encKey?this.state.encKey.toString('hex'):'input encryption key as a hex-encoded string and press enter'}
+					propName="hexKey"
+					change={(prop) => {
+						const encKey = Buffer.alloc(32);
+						encKey.write(prop.hexKey, 'hex');
+						this.setState({encKey: encKey});
+					}}
+					defaultProps={
+						this.state.encKey?{}:{style:{fontStyle:"italic",color:"gray"}}
+					}
+				/>
+				<div>
+					Encrypted File hash: {this.state.encHash}
 				</div>
 				<div>
 					<button

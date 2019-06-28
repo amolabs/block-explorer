@@ -1,5 +1,5 @@
 // vim: set noexpandtab ts=2 sw=2 :
-import React, { Component } from 'react';
+import React, { Component, useState, useEffect } from 'react';
 import { ec as EC } from 'elliptic';
 import sha256 from 'js-sha256';
 import { RIEInput, RIETextArea } from 'riek';
@@ -7,6 +7,7 @@ import { MdAutorenew } from 'react-icons/md';
 import * as rpc from '../rpc';
 import { Link } from 'react-router-dom'
 import { useCookies } from 'react-cookie';
+import { pubkeyEncrypt, pubkeyDecrypt } from '../crypto';
 
 // for faucet ask
 import axios from 'axios';
@@ -142,8 +143,17 @@ class Demo extends Component {
 		}
 	};
 
-	sendGrant = (custody) => {
-		if (this.state.seller.ecKey) { // sanity check
+	sendGrant = () => {
+		if (this.state.seller.ecKey && this.state.buyer.ecKey) { // sanity check
+			var encKey = pubkeyDecrypt(
+				this.state.seller.ecKey,
+				this.state.parcel.custody
+			);
+			var custody = pubkeyEncrypt(
+				this.state.buyer.ecKey,
+				encKey
+			);
+
 			rpc.grantParcel(
 				this.state.parcel,
 				this.state.buyer,
@@ -197,7 +207,7 @@ class Demo extends Component {
 				var owner, custody;
 				if (res) {
 					owner = res.owner;
-					custody = res.custody;
+					custody = Buffer(res.custody, 'hex');
 				} else {
 					owner = '';
 					custody = this.state.parcel.custody;
@@ -226,14 +236,14 @@ class Demo extends Component {
 					var grant, custody;
 					if (res) {
 						grant = this.state.buyer.address;
-						custody = res.custody;
+						custody = Buffer(res.custody, 'hex');
 					} else {
 						grant = '';
-						custody = '';
+						custody = null;
 					}
 					var parcel = this.state.parcel;
 					parcel.grant = grant.toUpperCase();
-					parcel.buyerCustody = custody.toUpperCase();
+					parcel.buyerCustody = custody;
 					this.setState({ parcel: parcel });
 				});
 			}
@@ -265,26 +275,25 @@ class Demo extends Component {
 							account={this.state.seller}
 							onInputSeed={this.setSellerAddress}
 						/>
+					</div>
+					<div className="col-md-6">
 						<DemoAccount
 							which='buyer'
 							account={this.state.buyer}
 							onInputSeed={this.setBuyerAddress}
 						/>
+					</div>
+				</div>
+				<div className="container row">
+					<div className="col-md-12">
 						<DemoParcel
 							parcel={this.state.parcel}
+							owner={this.state.seller}
+							buyer={this.state.buyer}
 							onInputParcelId={this.setParcelId}
 							onInputCustody={this.setKeyCustody}
 							onInputExtra={this.setExtra}
 						/>
-						<div className="container">
-							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
-							item</span> to edit. Seed input can be any string. Parcel ID and
-							key custody must be hexadecimal strings. Since extra info does
-							nothing import for now, just input anything you want.
-						</div>
-					</div>
-					<div className="col-md-6">
-						<ConsoleGuide state={this.state} />
 						<Trader
 							seller={this.state.seller}
 							buyer={this.state.buyer}
@@ -296,6 +305,12 @@ class Demo extends Component {
 							onGrant={this.sendGrant}
 							onRevoke={this.sendRevoke}
 						/>
+						<div className="container">
+							Click <span style={{borderBottom: "dashed gray 1px"}}>underlined
+							item</span> to edit. Seed input can be any string. Parcel ID and
+							key custody must be hexadecimal strings. Since extra info does
+							nothing import for now, just input anything you want.
+						</div>
 					</div>
 				</div>
 			</div>
@@ -352,7 +367,6 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 	return (
 		<div className="container round-box">
 			<b>{heading}</b>
-			<div>seed from cookies: {seedcookie}</div>
 			<div className="container">
 				Seed:&nbsp;
 				<RIEInput
@@ -383,8 +397,15 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 	);
 };
 
-const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => {
+const DemoParcel = ({parcel, owner, buyer, onInputParcelId, onInputCustody, onInputExtra}) => {
 	const [cookies, setCookie] = useCookies([ 'parcelid' ]);
+	const [encKey, setEncKey] = useState(null);
+	useEffect(() => {
+		// TODO: public key encryption
+		if (encKey && owner.ecKey) {
+			onInputCustody(pubkeyEncrypt(owner.ecKey, encKey));
+		}
+	}, [onInputCustody, owner.ecKey, encKey]);
 
 	var parcelLink;
 	if (!parcel) {
@@ -394,6 +415,11 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 	if (!parcel.id) parcel.id = cookies.parcelid;
 	if (parcel.id) {
 		parcelLink = (<Link to={'/parcel/' + parcel.id}>parcel page</Link>);
+	}
+
+	var restoredEncKey;
+	if (buyer.ecKey && parcel.buyerCustody) {
+		restoredEncKey = pubkeyDecrypt(buyer.ecKey, parcel.buyerCustody);
 	}
 
 	return (
@@ -414,16 +440,22 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 						}
 					/>
 				</div>
-				<div>Key custody:&nbsp;
+				<div>Encryption key:&nbsp;
 					<RIEInput
-						value={parcel.custody?parcel.custody:'input custody and press enter'}
-						propName="custody"
-						change={(prop) => {onInputCustody(prop.custody);}}
+						value={encKey?encKey.toString('hex')
+								:'input encryption key and press enter'}
+						propName="encKey"
+						change={(prop) => {
+							const encKey = Buffer.alloc(32);
+							encKey.write(prop.encKey, 'hex');
+							setEncKey(encKey);
+						}}
 						className="rie-inline"
-						defaultProps={
-							parcel.custody?{}:{style:{fontStyle:"italic",color:"gray"}}
-						}
+						defaultProps={ encKey?{}:{style:{fontStyle:"italic",color:"gray"}} }
 					/>
+				</div>
+				<div>Key custody:&nbsp;
+					{parcel.custody?parcel.custody.toString('hex'):''}
 				</div>
 				<div>Extra info:<br/>
 					<RIETextArea
@@ -443,7 +475,16 @@ const DemoParcel = ({parcel, onInputParcelId, onInputCustody, onInputExtra}) => 
 				<div>Pledged payment: {parcel.payment}</div>
 				<hr className="shallow"/>
 				<div>Grant: {parcel.grant}</div>
-				<div>Key custody: {parcel.buyerCustody}</div>
+				<div>
+					Buyer custody: {
+						parcel.buyerCustody?parcel.buyerCustody.toString('hex'):''
+					}
+				</div>
+				<div>
+					Restored encryption key: {
+						restoredEncKey?restoredEncKey.toString('hex'):''
+					}
+				</div>
 			</div>
 		</div>
 	);
@@ -579,18 +620,9 @@ class Trader extends Component {
 							Click the button <b>Grant</b> to grant a data parcel request on
 							behalf of the <b>seller</b>.
 						</div>
-						<form onSubmit={this.handleGrantSubmit}>
-							Key custody:&nbsp;
-							<input
-								type="text"
-								name="custody"
-								value={this.state.custodyInput}
-								onChange={this.handleGrantChange}
-							/>
-							<button type="submit">
-								Grant
-							</button>
-						</form>
+						<button type="button" onClick={this.props.onGrant}>
+							Grant
+						</button>
 						<hr className="shallow"/>
 						<div>
 							Click the button <b>Cancel</b> to cancel the parcel request on
@@ -637,11 +669,9 @@ const StepGuide = ({state}) => {
 	} else if (!state.buyer.address) {
 		msg = (<span>Generate a buyer account by setting a seed string. The generated key will not be shown on the screen, and stored in the browser's memory only. The seed string used to generate the key pair will be stored as a <b>browser cookie</b>. Of course, you can remember your seed string and reuse that in the future.</span>);
 	} else if (!state.parcel.id) {
-		msg = (<span>Enter data parcel ID as a <b>hexadecimal</b> string (without <code>0x</code> prefix). A parcel ID is used to identify and merchadize any data item in AMO ecosystem.</span>);
+		msg = (<span>Enter data parcel ID as a <b>hexadecimal</b> string (without <code>0x</code> prefix). A parcel ID is used to identify and merchandize any data item in AMO ecosystem. You may go to the <b>Parcel</b> page to upload a file, or you may just use any random hex string here.</span>);
 	} else if (!state.parcel.custody) {
-		msg = (<span>Enter key custody information of this data parcel as a <b>dexadecimal</b> string. This custody is used to store owner's data encryption key. Encryption feature is not ready for this demo page, so key custody has no meaning for now. Just type in any hexadecimal string.</span>);
-	} else if (!state.parcel.extra) {
-		msg = (<span>Enter some extra information of this data parcel. This extra information would be used to decide the lifetime of the data. But this feature is not ready for this demo page, so you may enter any string here.</span>);
+		msg = (<span>Enter data encryption key used to encrypt a data parcel. This key may be the one you entered in the <b>Parcel</b> page, or any random hex string if you don't want to bother to upload a real file. This data encryption key shall be transformed into a <b>Owner's key custody</b> automatically. Owner's key custody shall be stored in the blockchain alongside a data parcel, and the owner can always get the key custody and extract a data encryption key.</span>);
 	} else if (state.buyer.balance === 0 || state.buyer.balance === '0') {
 		msg = (<span>Now you need to acquire some AMO coins for the buyer to perform actual data trading. Open a <b>new</b> browser window or tab and visit the <a href="https://testnet.amolabs.io">faucet site</a> and acquire some.</span>);
 	} else if (!state.parcel.owner) {
@@ -649,9 +679,9 @@ const StepGuide = ({state}) => {
 	} else if (!state.parcel.buyer && !state.parcel.grant) {
 		msg = (<span>You've piched your first data on AMO blockchain. Good. Now, perform some action on behalf of a buyer. A buyer can send a <b>Request</b> transaction to inform the owner(<em>seller account</em>) of a data parcel that he/she wants to use the data. This action requires some coins as a payment to the data owner. Yes, this is a kind of escrow mechanism. You need to deposit the money first, and you will see that buyer's balance is reduced by the payment amount. Click the <b>Request</b> button in the <b>Trading demo</b> box. <b>Alternatively</b>, you can click the <b>Discard</b> button. In that case, data parcel in question will be discarded and AMO blockchain will forget about it.</span>);
 	} else if (!state.parcel.grant) {
-		msg = (<span>Now you have a data, and both of a seller and a buyer. And the buyer wants to buy the permission to use the data with some money as a pledged payment. You can click the <b>Grant</b> button to grant the <em>request</em> on behalf of the seller, and the seller will collect the pledged payment. When you grant a request, you need to specify a key custody. This key custody is not the one you entered in the <b>Data parcel</b> box. A key custody carried with the Grant transaction is for the buyer. Typically, it would be a data encryption key <em>encrypted</em> with the buyer's public key. The encryption feature is not ready yet, so you can enter any hexadecimal string here.</span>);
+		msg = (<span>Now you have a data, and both of a seller and a buyer. And the buyer wants to buy the permission to use the data with some money as a pledged payment. You can click the <b>Grant</b> button to grant the <em>request</em> on behalf of the seller, and the seller will collect the pledged payment. When you grant a request, you need to specify a key custody. In real life, the data owner need to fetch owner's key custody of a parcel; decrypt it to extract a data encryptio key; and encrypt it again with the buyer's public key. However, in this demo, the program will do this for you.</span>);
 	} else {
-		msg = (<span>Have you noticed that the seller's balance was increased by the buyer's pledged payment? Here ends the basic cycle of the data trading.</span>);
+		msg = (<span>Have you noticed that the seller's balance was increased by the buyer's pledged payment? Here ends the basic cycle of the data trading. You may see the <b>restored encryption key</b> in the bottom of the <b>Data parcel</b> box. You can decrypt a data parcel body with this key after you download a data.</span>);
 	}
 
 	return (
@@ -661,6 +691,7 @@ const StepGuide = ({state}) => {
 	);
 };
 
+/*
 const ConsoleGuide = ({state}) => {
 	var cmd;
 	var guide;
@@ -717,5 +748,6 @@ const ConsoleGuide = ({state}) => {
 		</div>
 	);
 }
+*/
 
 export default Demo;
