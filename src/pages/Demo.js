@@ -318,40 +318,38 @@ class Demo extends Component {
 	}
 }
 
-function askForCoin(ecKey) {
-	const address = sha256(ecKey.getPublic().encode()).slice(0,40);
+function askForCoin(address) {
 	//console.log('ask for coin with the address:', address);
 	const reqBody = JSON.stringify({ recp: address });
-	axios.post(
-		'http://139.162.116.176:2000', reqBody,
-		{
-			headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Headers': '*',
-			}
+	axios.post('http://139.162.116.176:2000', reqBody, {
+		headers: {
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Headers': '*',
 		}
-	)
-		.then(res => {
-			//console.log('res =', res);
-		});
+	}
+	).then(res => {
+		//console.log('res =', res);
+	});
 }
 
 const DemoAccount = ({which, account, onInputSeed}) => {
 	const [cookies, setCookie] = useCookies([ 'seedseller', 'seedbuyer' ]);
 
-	var faucetLink = (<div className="container"></div>);
 	if (!account) { // this is for a fail-safe. not needed really
 		account = {seed: null, address: null, ecKey: null, balance: 0};
 	}
 	// if the balance is less than one AMO
-	if (account.address && account.balance === 0) {
+	var faucetLink;
+	if (account.address && account.balance === '0') {
 		faucetLink = (
 			<div className="container">
-				<button onClick={()=>{askForCoin(account.ecKey);}}>
+				<button onClick={()=>{askForCoin(account.address);}}>
 					Ask for coin
 				</button>
 			</div>
 		);
+	} else {
+		faucetLink = (<div className="container"></div>);
 	}
 	var heading = 'Account';
 	var seedcookie;
@@ -673,7 +671,7 @@ const StepGuide = ({state}) => {
 	} else if (!state.parcel.custody) {
 		msg = (<span>Enter data encryption key used to encrypt a data parcel. This key may be the one you entered in the <b>Parcel</b> page, or any random hex string if you don't want to bother to upload a real file. This data encryption key shall be transformed into a <b>Owner's key custody</b> automatically. Owner's key custody shall be stored in the blockchain alongside a data parcel, and the owner can always get the key custody and extract a data encryption key.</span>);
 	} else if (state.buyer.balance === 0 || state.buyer.balance === '0') {
-		msg = (<span>Now you need to acquire some AMO coins for the buyer to perform actual data trading. Open a <b>new</b> browser window or tab and visit the <a href="https://testnet.amolabs.io">faucet site</a> and acquire some.</span>);
+		msg = (<span>Now you need to acquire some AMO coins for the buyer to perform actual data trading. Click <b>Ask for coin</b> button to get some coin. It will take some time.</span>);
 	} else if (!state.parcel.owner) {
 		msg = (<span>Everything has been setup and you can try some trading actions now. First, you need to send a <b>Register</b> transaction to register your demo parcel on AMO blockchain. This step is essential for other users to request your data. Click the <b>Register</b> button in the <b>Trading demo</b> box.</span>);
 	} else if (!state.parcel.buyer && !state.parcel.grant) {
