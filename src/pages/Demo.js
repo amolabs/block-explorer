@@ -691,6 +691,7 @@ const StepGuide = ({state}) => {
 	);
 };
 
+/*
 const ConsoleGuide = ({state}) => {
 	var cmd;
 	var guide;
@@ -747,5 +748,6 @@ const ConsoleGuide = ({state}) => {
 		</div>
 	);
 }
+*/
 
 export default Demo;
