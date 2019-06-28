@@ -1,5 +1,5 @@
 // vim: set noexpandtab ts=2 sw=2 :
-import React, { Component } from 'react';
+import React, { Component, useState, useEffect } from 'react';
 import { ec as EC } from 'elliptic';
 import sha256 from 'js-sha256';
 import { RIEInput, RIETextArea } from 'riek';
@@ -7,6 +7,7 @@ import { MdAutorenew } from 'react-icons/md';
 import * as rpc from '../rpc';
 import { Link } from 'react-router-dom'
 import { useCookies } from 'react-cookie';
+import { pubkeyEncrypt, pubkeyDecrypt } from '../crypto';
 
 // for faucet ask
 import axios from 'axios';
@@ -142,8 +143,17 @@ class Demo extends Component {
 		}
 	};
 
-	sendGrant = (custody) => {
-		if (this.state.seller.ecKey) { // sanity check
+	sendGrant = () => {
+		if (this.state.seller.ecKey && this.state.buyer.ecKey) { // sanity check
+			var encKey = pubkeyDecrypt(
+				this.state.seller.ecKey,
+				this.state.parcel.custody
+			);
+			var custody = pubkeyEncrypt(
+				this.state.buyer.ecKey,
+				encKey
+			);
+
 			rpc.grantParcel(
 				this.state.parcel,
 				this.state.buyer,
@@ -197,7 +207,7 @@ class Demo extends Component {
 				var owner, custody;
 				if (res) {
 					owner = res.owner;
-					custody = res.custody;
+					custody = Buffer(res.custody, 'hex');
 				} else {
 					owner = '';
 					custody = this.state.parcel.custody;
@@ -226,14 +236,14 @@ class Demo extends Component {
 					var grant, custody;
 					if (res) {
 						grant = this.state.buyer.address;
-						custody = res.custody;
+						custody = Buffer(res.custody, 'hex');
 					} else {
 						grant = '';
-						custody = '';
+						custody = null;
 					}
 					var parcel = this.state.parcel;
 					parcel.grant = grant.toUpperCase();
-					parcel.buyerCustody = custody.toUpperCase();
+					parcel.buyerCustody = custody;
 					this.setState({ parcel: parcel });
 				});
 			}
@@ -279,6 +289,7 @@ class Demo extends Component {
 						<DemoParcel
 							parcel={this.state.parcel}
 							owner={this.state.seller}
+							buyer={this.state.buyer}
 							onInputParcelId={this.setParcelId}
 							onInputCustody={this.setKeyCustody}
 							onInputExtra={this.setExtra}
@@ -386,8 +397,15 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 	);
 };
 
-const DemoParcel = ({parcel, owner, onInputParcelId, onInputCustody, onInputExtra}) => {
+const DemoParcel = ({parcel, owner, buyer, onInputParcelId, onInputCustody, onInputExtra}) => {
 	const [cookies, setCookie] = useCookies([ 'parcelid' ]);
+	const [encKey, setEncKey] = useState(null);
+	useEffect(() => {
+		// TODO: public key encryption
+		if (encKey && owner.ecKey) {
+			onInputCustody(pubkeyEncrypt(owner.ecKey, encKey));
+		}
+	}, [onInputCustody, owner.ecKey, encKey]);
 
 	var parcelLink;
 	if (!parcel) {
@@ -397,6 +415,11 @@ const DemoParcel = ({parcel, owner, onInputParcelId, onInputCustody, onInputExtr
 	if (!parcel.id) parcel.id = cookies.parcelid;
 	if (parcel.id) {
 		parcelLink = (<Link to={'/parcel/' + parcel.id}>parcel page</Link>);
+	}
+
+	var restoredEncKey;
+	if (buyer.ecKey && parcel.buyerCustody) {
+		restoredEncKey = pubkeyDecrypt(buyer.ecKey, parcel.buyerCustody);
 	}
 
 	return (
@@ -417,16 +440,22 @@ const DemoParcel = ({parcel, owner, onInputParcelId, onInputCustody, onInputExtr
 						}
 					/>
 				</div>
-				<div>Key custody:&nbsp;
+				<div>Encryption key:&nbsp;
 					<RIEInput
-						value={parcel.custody?parcel.custody:'input custody and press enter'}
-						propName="custody"
-						change={(prop) => {onInputCustody(prop.custody);}}
+						value={encKey?encKey.toString('hex')
+								:'input encryption key and press enter'}
+						propName="encKey"
+						change={(prop) => {
+							const encKey = Buffer.alloc(32);
+							encKey.write(prop.encKey, 'hex');
+							setEncKey(encKey);
+						}}
 						className="rie-inline"
-						defaultProps={
-							parcel.custody?{}:{style:{fontStyle:"italic",color:"gray"}}
-						}
+						defaultProps={ encKey?{}:{style:{fontStyle:"italic",color:"gray"}} }
 					/>
+				</div>
+				<div>Key custody:&nbsp;
+					{parcel.custody?parcel.custody.toString('hex'):''}
 				</div>
 				<div>Extra info:<br/>
 					<RIETextArea
@@ -446,7 +475,16 @@ const DemoParcel = ({parcel, owner, onInputParcelId, onInputCustody, onInputExtr
 				<div>Pledged payment: {parcel.payment}</div>
 				<hr className="shallow"/>
 				<div>Grant: {parcel.grant}</div>
-				<div>Key custody: {parcel.buyerCustody}</div>
+				<div>
+					Buyer custody: {
+						parcel.buyerCustody?parcel.buyerCustody.toString('hex'):''
+					}
+				</div>
+				<div>
+					Restored encryption key: {
+						restoredEncKey?restoredEncKey.toString('hex'):''
+					}
+				</div>
 			</div>
 		</div>
 	);
@@ -582,18 +620,9 @@ class Trader extends Component {
 							Click the button <b>Grant</b> to grant a data parcel request on
 							behalf of the <b>seller</b>.
 						</div>
-						<form onSubmit={this.handleGrantSubmit}>
-							Key custody:&nbsp;
-							<input
-								type="text"
-								name="custody"
-								value={this.state.custodyInput}
-								onChange={this.handleGrantChange}
-							/>
-							<button type="submit">
-								Grant
-							</button>
-						</form>
+						<button type="button" onClick={this.props.onGrant}>
+							Grant
+						</button>
 						<hr className="shallow"/>
 						<div>
 							Click the button <b>Cancel</b> to cancel the parcel request on

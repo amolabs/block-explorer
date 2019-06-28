@@ -297,7 +297,7 @@ export function registerParcel(parcel, sender, callback, errCallback) {
 		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			target: parcel.id.toUpperCase(),
-			custody: parcel.custody.toUpperCase(),
+			custody: parcel.custody.toString('hex').toUpperCase(),
 		},
 	};
 
@@ -376,7 +376,7 @@ export function grantParcel(parcel, grantee, custody, sender, callback, errCallb
 		payload: {
 			target: parcel.id.toUpperCase(),
 			grantee: grantee.address.toUpperCase(),
-			custody: custody.toUpperCase(),
+			custody: custody.toString('hex').toUpperCase(),
 		},
 	};
 
