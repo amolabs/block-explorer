@@ -12,6 +12,8 @@ import { pubkeyEncrypt, pubkeyDecrypt } from '../crypto';
 // for faucet ask
 import axios from 'axios';
 
+const faucetServer = '139.162.116.176:2000';
+
 class Demo extends Component {
 	state = {
 		seller: {},
@@ -321,15 +323,24 @@ class Demo extends Component {
 function askForCoin(address) {
 	//console.log('ask for coin with the address:', address);
 	const reqBody = JSON.stringify({ recp: address });
-	axios.post('http://139.162.116.176:2000', reqBody, {
-		headers: {
-			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Headers': '*',
-		}
-	}
-	).then(res => {
-		//console.log('res =', res);
-	});
+	axios
+		.post('http://'+faucetServer, reqBody, {
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Headers': '*',
+			}
+		})
+		.then(res => {
+			console.log('res =', res);
+		})
+		.catch(err => {
+			if (err.response)
+				console.log('response with error:', err.response);
+			else if (err.request)
+				console.log('error in request:', err.request);
+			else
+				console.log('error =', err.message);
+		});
 }
 
 const DemoAccount = ({which, account, onInputSeed}) => {
