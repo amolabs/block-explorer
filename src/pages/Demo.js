@@ -324,12 +324,7 @@ function askForCoin(address) {
 	//console.log('ask for coin with the address:', address);
 	const reqBody = JSON.stringify({ recp: address });
 	axios
-		.post('http://'+faucetServer, reqBody, {
-			headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Headers': '*',
-			}
-		})
+		.post('http://'+faucetServer, reqBody)
 		.then(res => {
 			console.log('res =', res);
 		})
