@@ -1,6 +1,6 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import React from 'react';
-import { accountLink, txLink, parcelLink } from '../util';
+import { accountLink, txLink, parcelLink, coinVerbose } from '../util';
 
 export const TxBody = ({tx}) => {
 	switch (tx.type) {
@@ -35,7 +35,7 @@ const TxTransfer = ({txBody}) => {
 	return (
 		<div>
 			<div>Recipient: {accountLink(txBody.to)}</div>
-			<div>Amount: {txBody.amount}</div>
+			<div>Amount: {coinVerbose(txBody.amount)}</div>
 		</div>
 	);
 }
@@ -45,7 +45,7 @@ const TxStake = ({txBody}) => {
 	return (
 		<div>
 			<div>Validator pubkey: {txBody.validator}</div>
-			<div>Amount: {txBody.amount}</div>
+			<div>Amount: {coinVerbose(txBody.amount)}</div>
 		</div>
 	);
 }
@@ -54,7 +54,7 @@ const TxWithdraw = ({txBody}) => {
 	// TODO: use validator pubkey link
 	return (
 		<div>
-			<div>Amount: {txBody.amount}</div>
+			<div>Amount: {coinVerbose(txBody.amount)}</div>
 		</div>
 	);
 }
@@ -63,7 +63,7 @@ const TxDelegate = ({txBody}) => {
 	return (
 		<div>
 			<div>Delegator: {accountLink(txBody.to)}</div>
-			<div>Amount: {txBody.amount}</div>
+			<div>Amount: {coinVerbose(txBody.amount)}</div>
 		</div>
 	);
 }
@@ -71,7 +71,7 @@ const TxDelegate = ({txBody}) => {
 const TxRetract = ({txBody}) => {
 	return (
 		<div>
-			<div>Amount: {txBody.amount}</div>
+			<div>Amount: {coinVerbose(txBody.amount)}</div>
 		</div>
 	);
 }
@@ -97,7 +97,7 @@ const TxRequest = ({txBody}) => {
 	return (
 		<div>
 			<div>Parcel: {parcelLink(txBody.target)}</div>
-			<div>Payment: {txBody.payment}</div>
+			<div>Payment: {coinVerbose(txBody.payment)}</div>
 		</div>
 	);
 }

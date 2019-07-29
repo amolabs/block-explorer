@@ -5,7 +5,7 @@ import crypto from 'crypto';
 
 //const HOST = 'localhost:26657';
 //const HOST = '192.168.50.88:26657';
-const HOST = '139.162.116.176:26657';
+const HOST = '139.162.116.176:26657'; // amo-tokyo
 const wsURL = `ws://${HOST}/websocket`;
 const httpURL = `http://${HOST}`;
 

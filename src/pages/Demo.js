@@ -8,6 +8,7 @@ import * as rpc from '../rpc';
 import { Link } from 'react-router-dom'
 import { useCookies } from 'react-cookie';
 import { pubkeyEncrypt, pubkeyDecrypt } from '../crypto';
+import { coinVerbose } from '../util';
 
 // for faucet ask
 import axios from 'axios';
@@ -394,7 +395,7 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 				}
 			</div>
 			<div className="container">
-				Balance: {account.balance}
+				Balance: {coinVerbose(account.balance)}
 			</div>
 			{faucetLink}
 		</div>
@@ -476,7 +477,7 @@ const DemoParcel = ({parcel, owner, buyer, onInputParcelId, onInputCustody, onIn
 				<div>Owner: {parcel.owner}</div>
 				<hr className="shallow"/>
 				<div>Buyer: {parcel.buyer}</div>
-				<div>Pledged payment: {parcel.payment}</div>
+				<div>Pledged payment: {coinVerbose(parcel.payment)}</div>
 				<hr className="shallow"/>
 				<div>Grant: {parcel.grant}</div>
 				<div>

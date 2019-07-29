@@ -70,3 +70,10 @@ export const parcelLink = (parcelID) => {
 	return ( <Link to={"/parcel/" + parcelID}>{parcelID}</Link>);
 };
 
+export function coinVerbose(mote) {
+	if (mote) {
+		return mote + ' mote (' + mote/1000000000000000000 + ' AMO)';
+	} else {
+		return null;
+	}
+}
