@@ -77,3 +77,9 @@ export function coinVerbose(mote) {
 		return null;
 	}
 }
+
+export function bin2hex(bin) {
+	return bin.reduce((out, elem) =>
+		(out + ('0' + elem.toString(16)).slice(-2)),
+		'');
+}
