@@ -8,7 +8,7 @@ import * as rpc from '../rpc';
 import { Link } from 'react-router-dom'
 import { useCookies } from 'react-cookie';
 import { pubkeyEncrypt, pubkeyDecrypt } from '../crypto';
-import { coinVerbose } from '../util';
+import { accountLink, coinVerbose } from '../util';
 
 // for faucet ask
 import axios from 'axios';
@@ -390,7 +390,7 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 			<div className="container">
 				Address: {
 					account.address?
-						account.address:
+						accountLink(account.address):
 						(<span style={{fontStyle:"italic",color:"gray"}}>not generated yet</span>)
 				}
 			</div>
