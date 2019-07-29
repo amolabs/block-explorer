@@ -13,7 +13,7 @@ import { accountLink, coinVerbose } from '../util';
 // for faucet ask
 import axios from 'axios';
 
-const faucetServer = '139.162.116.176:2000';
+const faucetServer = '139.162.116.176:20000';
 
 class Demo extends Component {
 	state = {
