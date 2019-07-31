@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { TxBriefList } from '../components/Tx';
-import { TextInput, KeyValueRow, coinVerbose, bin2hex } from '../util';
+import { TextInput, KeyValueRow, coinVerbose, pub2address, validatorLink } from '../util';
 import { fetchBalance, fetchStake, fetchTxsByAccount } from '../rpc';
 
 class Account extends Component {
@@ -105,9 +105,17 @@ class Stake extends Component {
 	render() {
 		var stake = this.state.stake;
 		if (!stake) stake = { amount: 0 };
-		const desc = coinVerbose(stake.amount)
-			+ (stake.validator ?
-			(' for validator ' + bin2hex(stake.validator)) : '');
+		var desc;
+		if (stake.validator) {
+			desc = (
+				<span>
+					{coinVerbose(stake.amount)} for
+					validator {validatorLink(pub2address(stake.validator))}
+				</span>
+			);
+		} else {
+			desc = '';
+		}
 		return ( <KeyValueRow k="Stake" v={desc}/> );
 	}
 }
