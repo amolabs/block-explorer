@@ -194,6 +194,28 @@ export function fetchTxsByParcel(parcel, callback) {
 	);
 }
 
+function matchAddress(item, address) {
+	return item.address.toUpperCase() === address.toUpperCase();
+}
+
+export function fetchValidator(address, callback) {
+	axios.get(`${httpURL}/validators`).then(
+		res => {
+			var hit = res.data.result.validators.find((val) => {
+				return matchAddress(val, address);
+			});
+			if (hit) {
+				var buf = Buffer.from(hit.pub_key.value, 'base64');
+				hit.pubkey = buf.toString('hex');
+				callback(hit);
+			} else {
+				callback(null);
+			}
+		},
+		err => { callback(null); }
+	);
+}
+
 //////// abci query rpc
 
 export function abciQuery(type, params, onSuccess, onError) {
@@ -219,6 +241,13 @@ export function fetchStake(address, callback) {
 	abciQuery('stake', address,
 		res => { callback(JSON.parse(atob(res))); },
 		err => { callback(null); }
+	);
+}
+
+export function fetchStakeHolder(address, callback) {
+	abciQuery('validator', address,
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(0); }
 	);
 }
 

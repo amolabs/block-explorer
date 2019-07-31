@@ -1,4 +1,5 @@
 // vim: set noexpandtab ts=2 sw=2 :
+import sha256 from 'js-sha256';
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -78,8 +79,12 @@ export function coinVerbose(mote) {
 	}
 }
 
-export function bin2hex(bin) {
-	return bin.reduce((out, elem) =>
+export function array2hex(bytearray) {
+	return bytearray.reduce((out, elem) =>
 		(out + ('0' + elem.toString(16)).slice(-2)),
 		'');
+}
+
+export function pub2address(bin) {
+	return sha256(bin).slice(0,40);
 }
