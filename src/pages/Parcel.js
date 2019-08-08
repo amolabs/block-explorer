@@ -3,16 +3,7 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { TxBriefList } from '../components/Tx';
 import { TextInput, KeyValueRow, accountLink } from '../util';
-import { fetchParcel, fetchTxsByParcel } from '../rpc';
-import AWS from 'aws-sdk';
-import sha256 from 'js-sha256';
-import { RIEInput } from 'riek';
-import aes from 'browserify-aes';
-
-const s3endpoint = 'http://172.105.221.117:7480';
-const s3accessKey = '65IDDDG7C7UB1NAIJM7Z';
-const s3secretKey = 'rRoRko915CCU20l1T2LnDWIyLuwsY4MrLcf0lJgZ';
-const s3bucket = 'raw';
+import * as rpc from '../rpc';
 
 class Parcel extends Component {
 	state = {
@@ -68,7 +59,7 @@ class ParcelDetail extends Component {
 
 	updateParcel = () => {
 		if (this.props.parcelID) {
-			fetchParcel(this.props.parcelID,
+			rpc.fetchParcel(this.props.parcelID,
 				result => {
 					this.setState({ parcel: result?result:{} });
 				}
@@ -89,7 +80,7 @@ class ParcelDetail extends Component {
 				<KeyValueRow k="Parcel ID" v={parcelIDAlt} />
 				<KeyValueRow k="Owner" v={accountLink(parcel.owner)} />
 				<KeyValueRow k="Owner Key Custody" v={parcel.custody} />
-				<ParcelPayload
+				<ParcelMetadata
 					parcelID={this.props.parcelID}
 					onChangeID={this.props.onChangeID}
 				/>
@@ -99,269 +90,56 @@ class ParcelDetail extends Component {
 	}
 }
 
-class ParcelPayload extends Component {
+class ParcelMetadata extends Component {
 	state = {
-		payload: null,
-		payloadAlt: null,
-		s3online: false,
-		encKey: null,
-		decrypted: null,
+		metadata: null,
+		alt: null,
 	};
 
 	componentDidMount() {
-		this.s3 = new AWS.S3({
-			endpoint: s3endpoint,
-			accessKeyId: s3accessKey,
-			secretAccessKey: s3secretKey,
-			s3ForcePathStyle: true,
-		});
-		this.s3.headBucket({Bucket: s3bucket}, (err, data) => {
-			if (!err) {
-				this.setState({s3online: true});
-			}
-		});
-
-		this.updatePayload(this.props.parcelID);
+		this.updateMetadata(this.props.parcelID);
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		if (this.props.parcelID !== prevProps.parcelID
-			|| this.state.s3online !== prevState.s3online)
-		{
-			this.updatePayload(this.props.parcelID);
-		}
-
-		if (prevState.encKey !== this.state.encKey
-			|| this.state.payload !== prevState.payload) {
-			this.doDecrypt();
+		if (this.props.parcelID !== prevProps.parcelID) {
+			this.updateMetadata(this.props.parcelID);
 		}
 	}
 
-	updatePayload = (id) => {
+	updateMetadata = (id) => {
 		if (!id) {
 			this.setState({
-				payload: null,
-				payloadAlt: null,
-				decrypted: null,
+				metadata: null,
 			});
 			return;
-		}
-		if (this.state.s3online && id) {
-			this.setState({payloadAlt: 'loading...'});
-			this.s3.getObject({
-				Bucket: s3bucket,
-				Key: id
-			}, (err, data) => {
+		} else {
+			this.setState({alt: 'loading...'});
+			rpc.inspectParcel(id, (err, meta) => {
 				if (err) {
 					this.setState({
-						payload: null,
-						payloadAlt: 'failed to get data parcel payload',
-						decrypted: null,
+						metadata: null,
+						alt: 'failed to get data parcel',
 					});
 				} else {
 					this.setState({
-						payload: data,
-						payloadAlt: null,
-						decrypted: null,
+						metadata: meta,
+						alt: null,
 					});
 				}
 			});
 		}
 	}
 
-	uploadPayload = (hash, content) => {
-		if (this.s3) {
-			this.s3.putObject({
-				Bucket: s3bucket,
-				Key: hash,
-				Body: content,
-			}, (err, data) => {
-				if (err) console.log(err);
-				else this.props.onChangeID(hash);
-			});
-		}
-	};
-
-	doDecrypt = () => {
-		if (this.state.payload && this.state.payload.Body && this.state.encKey) {
-			console.log('do decrypt');
-			const cipher = aes.createDecipheriv(
-				'AES-256-CTR',
-				this.state.encKey,
-				Buffer(16, 0)
-			);
-
-			let chunk = cipher.update(this.state.payload.Body);
-			let final = cipher.final();
-			let decrypted = Buffer.concat([chunk, final]);
-
-			this.setState({ decrypted: decrypted });
-		}
-	};
-
 	render() {
-		var payload;
-		if (this.state.payload) {
-			payload = this.state.payload;
+		var metadata;
+		if (this.state.metadata) {
+			metadata = this.state.metadata;
 		} else {
-			payload = {ContentType: null, Body: []};
-		}
-
-		var renderedBody;
-		if (this.state.decrypted) {
-			renderedBody = (<div>Body:
-				<div className="container">
-					<div>
-						{this.state.decrypted.slice(0,256).toString()}
-					</div>
-					<RIEInput
-						className="rie-inline"
-						value={this.state.encKey?this.state.encKey.toString('hex'):'input encryption key as a hex-encoded string and press enter'}
-						propName="hexKey"
-						change={(prop) => {
-							const encKey = Buffer.alloc(32);
-							encKey.write(prop.hexKey, 'hex');
-							this.setState({encKey: encKey});
-						}}
-						defaultProps={
-							this.state.encKey?{}:{style:{fontStyle:"italic",color:"gray"}}
-						}
-					/>
-				</div>
-			</div>
-			);
-		} else if (this.state.payload) {
-			// this.state.decrypted
-			renderedBody = (<div>Body:
-				<div className="container">
-					<div>
-						{payload.Body.slice(0,256).toString()}
-					</div>
-					<RIEInput
-						className="rie-inline"
-						value={this.state.encKey?this.state.encKey.toString('hex'):'input encryption key as a hex-encoded string and press enter'}
-						propName="hexKey"
-						change={(prop) => {
-							const encKey = Buffer.alloc(32);
-							encKey.write(prop.hexKey, 'hex');
-							this.setState({encKey: encKey});
-						}}
-						defaultProps={
-							this.state.encKey?{}:{style:{fontStyle:"italic",color:"gray"}}
-						}
-					/>
-				</div>
-			</div>);
-		} else if (!this.props.parcelID) {
-			renderedBody = (<UploadForm doUpload={this.uploadPayload}/>);
-		} else {
-			renderedBody = (<div>Body: </div>);
+			metadata = this.state.alt;
 		}
 
 		return (
-			<div>
-				Payload: {this.state.payloadAlt}
-				<div className="container">
-					<div>ContentType: {payload.ContentType}</div>
-					{renderedBody}
-				</div>
-			</div>
-		);
-	}
-}
-
-class UploadForm extends Component {
-	state = {
-		content: null,
-		fileHash: null,
-		uploading: false,
-		encKey: null,
-		encrypted: null,
-		encHash: null,
-	};
-
-	componentDidUpdate(prevProps, prevState) {
-		if (prevState.encKey !== this.state.encKey
-			|| prevState.content !== this.state.content) {
-			this.doEncrypt();
-		}
-	}
-
-	doEncrypt = () => {
-		if (this.state.encKey && this.state.content) {
-			console.log('do encrypt');
-			const cipher = aes.createCipheriv(
-				'AES-256-CTR',
-				this.state.encKey,
-				Buffer(16, 0)
-			);
-
-			let chunk = cipher.update(this.state.content);
-			let final = cipher.final();
-			let encrypted = Buffer.concat([chunk, final]);
-			let encHash = sha256(encrypted);
-			console.log('content len =', this.state.content.length);
-			console.log('encrypt len =', encrypted.length);
-			this.setState({encrypted: encrypted, encHash: encHash});
-		}
-	};
-
-	handleFileChange = (e) => {
-		const rd = new FileReader();
-		rd.onload = () => {
-			var fileHash = sha256(rd.result);
-			this.setState({content: Buffer(rd.result), fileHash: fileHash});
-		};
-		rd.readAsArrayBuffer(e.target.files[0]);
-	};
-
-	handleSubmit = () => {
-		this.setState({uploading: true});
-		if (this.state.encrypted) {
-			this.props.doUpload(this.state.encHash, this.state.encrypted);
-		} else if (this.state.content) {
-			this.props.doUpload(this.state.fileHash, this.state.content);
-		}
-	};
-
-	render() {
-		const label = this.state.uploading?'Uploading...':'Upload';
-		return (
-			<div>
-				<div>
-					Select a file to upload:&nbsp;
-					<input type="file" onChange={this.handleFileChange}/>
-				</div>
-				<font color='red'>Don't upload any sensitive files</font>
-				<div>
-					File hash: {this.state.fileHash}
-				</div>
-				<RIEInput
-					className="rie-inline"
-					value={this.state.encKey?this.state.encKey.toString('hex'):'input encryption key as a hex-encoded string and press enter'}
-					propName="hexKey"
-					change={(prop) => {
-						const encKey = Buffer.alloc(32);
-						encKey.write(prop.hexKey, 'hex');
-						this.setState({encKey: encKey});
-					}}
-					defaultProps={
-						this.state.encKey?{}:{style:{fontStyle:"italic",color:"gray"}}
-					}
-				/>
-				<div>
-					Encrypted File hash: {this.state.encHash}
-				</div>
-				<div>
-					<button
-						type="button"
-						onClick={this.handleSubmit}
-						disabled={!this.state.content||this.state.uploading}
-					>
-						{label}
-					</button>
-				</div>
-			</div>
+			<KeyValueRow k="Metadata" v={JSON.stringify(metadata)} />
 		);
 	}
 }
@@ -381,7 +159,7 @@ class ParcelTxs extends Component {
 
 	updateTxs = () => {
 		if (this.props.parcelID) {
-			fetchTxsByParcel(this.props.parcelID,
+			rpc.fetchTxsByParcel(this.props.parcelID,
 				result => { this.setState({ txs: result }); }
 			);
 		} else {

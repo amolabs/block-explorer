@@ -3,11 +3,14 @@ import axios from 'axios';
 import sha256 from 'js-sha256';
 import crypto from 'crypto';
 
-//const HOST = 'localhost:26657';
-//const HOST = '192.168.50.88:26657';
-const HOST = '139.162.116.176:26657'; // amo-tokyo
-const wsURL = `ws://${HOST}/websocket`;
-const httpURL = `http://${HOST}`;
+//const BCNODE = 'localhost:26657';
+//const BCNODE = '192.168.50.88:26657';
+const BCNODE = '139.162.116.176:26657'; // amo-tokyo
+//const BCNODE = '172.105.64.192:26657'; // amo-frank2
+const wsURL = `ws://${BCNODE}/websocket`;
+const httpURL = `http://${BCNODE}`;
+
+const STORAGE = 'http://139.162.111.178:5000'; // amo-sto
 
 let ws;
 
@@ -431,5 +434,23 @@ export function revokeGrant(parcel, grantee, sender, callback, errCallback) {
 
 	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
 	sendTx(rawTx, callback, errCallback);
+}
+
+//////// amo-storage rpc
+
+export function inspectParcel(id, cb) {
+	// No auth
+	axios.get(`${STORAGE}/api/v1/parcels/${id}?key=metadata`)
+		.then(res2 => {
+			if ('error' in res2.data) {
+				cb(res2.data.error, null);
+			} else {
+				console.log('res2.data =', res2.data.metadata);
+				cb(null, res2.data.metadata);
+			}
+		})
+		.catch(err => {
+			cb(err, null);
+		});
 }
 
