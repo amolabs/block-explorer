@@ -304,14 +304,18 @@ function sendTx(tx, callback, errCallback) {
 		});
 }
 
-function signTx(tx, key) {
-	const sig = key.sign(sha256(JSON.stringify(tx)));
+function sign(sb, key) {
+	const sig = key.sign(sha256(sb));
 	const r = ('0000'+sig.r.toString('hex')).slice(-64); // fail-safe
 	const s = ('0000'+sig.s.toString('hex')).slice(-64); // fail-safe
+	return r+s;
+}
 
+function signTx(tx, key) {
+	const sig = sign(JSON.stringify(tx), key);
 	tx.signature = {
 		pubkey: key.getPublic().encode('hex'),
-		sig_bytes: r + s,
+		sig_bytes: sig,
 	};
 
 	return tx;
@@ -438,6 +442,86 @@ export function revokeGrant(parcel, grantee, sender, callback, errCallback) {
 
 //////// amo-storage rpc
 
+export function uploadParcel(owner, content, cb) {
+	axios.post(`${STORAGE}/api/v1/auth`, JSON.stringify(
+		{
+			user: owner.address,
+			operation: {
+				name: 'upload',
+				hash: sha256(content).toString('hex'),
+			}
+		}),
+		{headers: {'content-type': 'application/json'}}
+	)
+		.then(res1 => {
+			var token = res1.data.token;
+			axios.post(`${STORAGE}/api/v1/parcels`, JSON.stringify(
+				{
+					owner: owner.address,
+					metadata: {
+						owner: owner.address,
+					},
+					data: content.toString('hex'),
+				}),
+				{headers: {
+					'Content-Type': 'application/json',
+					'X-Auth-Token': token,
+					'X-Public-Key': owner.ecKey.getPublic().encode('hex'),
+					'X-Signature': sign(token, owner.ecKey),
+				}}
+			)
+				.then(res2 => {
+					if ('error' in res2.data) {
+						cb(res2.data.error, null);
+					} else {
+						cb(null, res2.data.id);
+					}
+				})
+				.catch(err => {
+					cb(err, null);
+				});
+		})
+		.catch(err => {
+			console.log('err =', err);
+			cb(err, null);
+		});
+}
+
+export function downloadParcel(buyer, id, cb) {
+	axios.post(`${STORAGE}/api/v1/auth`, JSON.stringify(
+		{
+			user: buyer.address,
+			operation: {
+				name: 'download',
+				id: id
+			}
+		}),
+		{headers: {'content-type': 'application/json'}}
+	)
+		.then(res1 => {
+			var token = res1.data.token;
+			axios.get(`${STORAGE}/api/v1/parcels/${id}`,
+				{headers: {
+					'Content-Type': 'application/json',
+					'X-Auth-Token': token,
+					'X-Public-Key': buyer.ecKey.getPublic().encode('hex'),
+					'X-Signature': sign(token, buyer.ecKey),
+				}})
+				.then(res2 => {
+					if ('error' in res2.data) {
+						cb(res2.data.error, null);
+					} else {
+						cb(null, res2.data.data);
+					}
+				})
+				.catch(err => {
+					cb(err, null);
+				});
+		})
+		.catch(err => {
+		});
+}
+
 export function inspectParcel(id, cb) {
 	// No auth
 	axios.get(`${STORAGE}/api/v1/parcels/${id}?key=metadata`)
@@ -452,5 +536,8 @@ export function inspectParcel(id, cb) {
 		.catch(err => {
 			cb(err, null);
 		});
+}
+
+export function removeParcel(id, cb) {
 }
 

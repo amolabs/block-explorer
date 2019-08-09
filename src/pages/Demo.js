@@ -9,6 +9,9 @@ import { Link } from 'react-router-dom'
 import { useCookies } from 'react-cookie';
 import { pubkeyEncrypt, pubkeyDecrypt } from '../crypto';
 import { accountLink, coinVerbose } from '../util';
+import aes from 'browserify-aes';
+import chardet from 'chardet';
+import iconv from 'iconv-lite';
 
 // for faucet ask
 import axios from 'axios';
@@ -403,10 +406,9 @@ const DemoAccount = ({which, account, onInputSeed}) => {
 };
 
 const DemoParcel = ({parcel, owner, buyer, onInputParcelId, onInputCustody, onInputExtra}) => {
-	const [cookies, setCookie] = useCookies([ 'parcelid' ]);
+	const [cookies, setCookie, removeCookie] = useCookies([ 'parcelid' ]);
 	const [encKey, setEncKey] = useState(null);
 	useEffect(() => {
-		// TODO: public key encryption
 		if (encKey && owner.ecKey) {
 			onInputCustody(pubkeyEncrypt(owner.ecKey, encKey));
 		}
@@ -427,37 +429,47 @@ const DemoParcel = ({parcel, owner, buyer, onInputParcelId, onInputCustody, onIn
 		restoredEncKey = pubkeyDecrypt(buyer.ecKey, parcel.buyerCustody);
 	}
 
+	var parcelUpload;
+	if (!parcel.id) {
+		parcelUpload = (
+			<UploadParcel
+				owner={owner}
+				onNewParcelID={(id) => {
+					onInputParcelId(id);
+					if (id) {
+						setCookie('parcelid', id);
+					} else {
+						removeCookie('parcelid');
+					}
+				}}
+				onNewEncKey={setEncKey}
+			/>
+		);
+	}
+
+	var parcelDownload;
+	if (buyer && parcel && restoredEncKey) {
+		parcelDownload = (
+			<DownloadParcel
+				buyer={buyer}
+				parcelid={parcel.id}
+				encKey={restoredEncKey}
+			/>
+		);
+	}
+
 	return (
 		<div className="container round-box">
 			<b>Data parcel</b> {parcelLink}
 			<div className="container">
-				<div>Parcel ID:&nbsp;
-					<RIEInput
-						value={parcel.id?parcel.id:'input id and press enter'}
-						propName="id"
-						change={(prop) => {
-							setCookie('parcelid', prop.id);
-							onInputParcelId(prop.id);
-						}}
-						className="rie-inline"
-						defaultProps={
-							parcel.id?{}:{style:{fontStyle:"italic",color:"gray"}}
-						}
-					/>
-				</div>
-				<div>Encryption key:&nbsp;
-					<RIEInput
-						value={encKey?encKey.toString('hex')
-								:'input encryption key and press enter'}
-						propName="encKey"
-						change={(prop) => {
-							const encKey = Buffer.alloc(32);
-							encKey.write(prop.encKey, 'hex');
-							setEncKey(encKey);
-						}}
-						className="rie-inline"
-						defaultProps={ encKey?{}:{style:{fontStyle:"italic",color:"gray"}} }
-					/>
+				{parcelUpload}
+				<div>Parcel ID: {parcel.id}
+					<button
+						type="button"
+						onClick={() => {onInputParcelId(null); removeCookie('parcelid');}}
+					>
+						Reset
+					</button>
 				</div>
 				<div>Key custody:&nbsp;
 					{parcel.custody?parcel.custody.toString('hex'):''}
@@ -490,10 +502,164 @@ const DemoParcel = ({parcel, owner, buyer, onInputParcelId, onInputCustody, onIn
 						restoredEncKey?restoredEncKey.toString('hex'):''
 					}
 				</div>
+				<hr className="shallow"/>
+				{parcelDownload}
 			</div>
 		</div>
 	);
 };
+
+class UploadParcel extends Component {
+	state = {
+		content: null,
+		fileHash: null,
+		uploading: false,
+		encKey: null,
+		encrypted: null,
+		encHash: null,
+	};
+
+	componentDidUpdate(prevProps, prevState) {
+		if (prevState.encKey !== this.state.encKey
+			|| prevState.content !== this.state.content) {
+			this.doEncrypt();
+		}
+	}
+
+	doEncrypt = () => {
+		if (this.state.encKey && this.state.content) {
+			console.log('do encrypt');
+			const cipher = aes.createCipheriv(
+				'AES-256-CTR',
+				this.state.encKey,
+				Buffer(16, 0)
+			);
+
+			let chunk = cipher.update(this.state.content);
+			let final = cipher.final();
+			let encrypted = Buffer.concat([chunk, final]);
+			let encHash = sha256(encrypted);
+			this.setState({encrypted: encrypted, encHash: encHash});
+		}
+	};
+
+	handleFileChange = (e) => {
+		const rd = new FileReader();
+		rd.onload = () => {
+			var fileHash = sha256(rd.result);
+			this.setState({content: Buffer(rd.result), fileHash: fileHash});
+		};
+		rd.readAsArrayBuffer(e.target.files[0]);
+	};
+
+	// TODO: combine handleSubmit() and uploadParcel()
+	handleSubmit = () => {
+		if (this.state.encHash) {
+			this.setState({uploading: true});
+			this.uploadParcel(this.props.owner, this.state.encrypted, (err, res) => {
+				this.setState({uploading: false});
+				//if (err) {
+				//}
+			});
+		}
+	};
+
+	uploadParcel = (owner, content) => {
+		rpc.uploadParcel(owner, content, (err, id) => {
+			this.setState({uploading: false});
+			if (err) {
+				this.props.onNewParcelID(null);
+			} else {
+				this.props.onNewParcelID(id);
+				if (this.state.encKey) {
+					this.props.onNewEncKey(this.state.encKey);
+				}
+			}
+		});
+	};
+
+	render() {
+		const label = this.state.uploading?'Uploading...':'Upload';
+		return (
+			<div>
+				<div>
+					Select a file to upload:&nbsp;
+					<input type="file" onChange={this.handleFileChange}/>
+				</div>
+				<font color='red'>Don't upload any sensitive files</font>
+				<div>
+					File hash: {this.state.fileHash}
+				</div>
+				<div>Encryption key:&nbsp;
+					<RIEInput
+						className="rie-inline"
+						value={this.state.encKey?this.state.encKey.toString('hex'):'input encryption key as a hex-encoded string and press enter'}
+						propName="hexKey"
+						change={(prop) => {
+							const encKey = Buffer.alloc(32);
+							encKey.write(prop.hexKey, 'hex')
+							this.setState({encKey: encKey});
+						}}
+						defaultProps={
+							this.state.encKey?{}:{style:{fontStyle:"italic",color:"gray"}}
+						}
+					/>
+				</div>
+				<div>
+					Encrypted File hash: {this.state.encHash}
+				</div>
+				<div>
+					<button
+						type="button"
+						onClick={this.handleSubmit}
+						disabled={!this.state.encHash||this.state.uploading}
+					>
+						{label}
+					</button>
+				</div>
+			</div>
+		);
+	}
+}
+
+function DownloadParcel({buyer, parcelid, encKey}) {
+	const [rawBody, setRawBody] = useState(null);
+	useEffect(() => {
+		if (buyer && parcelid) {
+			rpc.downloadParcel(buyer, parcelid, (err, data) => {
+				setRawBody(data);
+			});
+		}
+	}, [buyer, parcelid]);
+	const [plain, setPlain] = useState(null);
+	useEffect(() => {
+		if (rawBody) {
+			const decipher = aes.createDecipheriv(
+				'AES-256-CTR',
+				encKey,
+				Buffer(16, 0)
+			);
+
+			let chunk = decipher.update(Buffer(rawBody, 'hex'));
+			let final = decipher.final();
+			let plain = Buffer.concat([chunk, final]);
+			setPlain(plain);
+		}
+	}, [rawBody, encKey]);
+
+	var display;
+	if (!plain) display = 'loading...';
+	else {
+		var encoding = chardet.detect(plain);
+		display = iconv.decode(plain, encoding);
+	}
+
+	return (
+		<div>
+			{display}
+		</div>
+	);
+}
 
 class Trader extends Component {
 	state = {
