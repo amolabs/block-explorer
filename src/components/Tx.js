@@ -34,7 +34,7 @@ export const TxBody = ({tx}) => {
 const TxTransfer = ({txBody}) => {
 	return (
 		<div>
-			<div>Recipient: {accountLink(txBody.to)}</div>
+			<div>To (Recipient): {accountLink(txBody.to)}</div>
 			<div>Amount: {coinVerbose(txBody.amount)}</div>
 		</div>
 	);
@@ -62,7 +62,7 @@ const TxWithdraw = ({txBody}) => {
 const TxDelegate = ({txBody}) => {
 	return (
 		<div>
-			<div>Delegator: {accountLink(txBody.to)}</div>
+			<div>To (Delegatee): {accountLink(txBody.to)}</div>
 			<div>Amount: {coinVerbose(txBody.amount)}</div>
 		</div>
 	);
