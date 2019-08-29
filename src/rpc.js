@@ -254,6 +254,13 @@ export function fetchStakeHolder(address, callback) {
 	);
 }
 
+export function fetchDelegate(address, callback) {
+	abciQuery('delegate', address,
+		res => { callback(JSON.parse(atob(res))); },
+		err => { callback(null); }
+	);
+}
+
 export function fetchParcel(id, callback) {
 	abciQuery('parcel', id,
 		res => { callback(JSON.parse(atob(res))); },

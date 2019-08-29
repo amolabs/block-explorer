@@ -2,8 +2,8 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { TxBriefList } from '../components/Tx';
-import { TextInput, KeyValueRow, coinVerbose, pub2address, validatorLink } from '../util';
-import { fetchBalance, fetchStake, fetchTxsByAccount } from '../rpc';
+import { TextInput, KeyValueRow, coinVerbose, pub2address, validatorLink, accountLink } from '../util';
+import { fetchBalance, fetchStake, fetchDelegate, fetchTxsByAccount } from '../rpc';
 
 class Account extends Component {
 	state = {
@@ -46,6 +46,7 @@ const AccountDetail = ({address}) => {
 			<KeyValueRow k="Address" v={addressAlt} />
 			<Balance address={address}/>
 			<Stake address={address}/>
+			<Delegate address={address}/>
 			<AccountTxs address={address}/>
 		</div>
 	);
@@ -80,7 +81,7 @@ class Balance extends Component {
 }
 
 class Stake extends Component {
-	state = { stake: { amount: "loading...", validator: null } };
+	state = { stake: { amount: "loading...", validator: null, delegates: [] } };
 
 	componentDidMount() {
 		this.updateStake();
@@ -114,9 +115,72 @@ class Stake extends Component {
 				</span>
 			);
 		} else {
-			desc = '';
+			desc = 'none';
 		}
-		return ( <KeyValueRow k="Stake" v={desc}/> );
+		var ds;
+		if (stake.delegates) {
+			ds = (
+				<div className="container">
+					<ul>
+						{ stake.delegates.map((d) => {
+							return (<li key={d.delegator}><span>
+									{coinVerbose(d.amount)} from
+									account {accountLink(d.delegator)}
+							</span></li>)
+						}) }
+					</ul>
+				</div>
+			);
+		} else {
+			ds = ''
+		}
+		return (
+			<div>
+				<KeyValueRow k="Stake" v={desc}/>
+				{ds}
+			</div>
+		);
+	}
+}
+
+class Delegate extends Component {
+	state = { delegate: { amount: "loading...", delegatee: null } };
+
+	componentDidMount() {
+		this.updateDelegate();
+	}
+
+	componentDidUpdate(prevProps) {
+		if (this.props.address !== prevProps.address) {
+			this.updateDelegate();
+		}
+	}
+
+	updateDelegate = () => {
+		if (this.props.address) {
+			fetchDelegate(this.props.address,
+				result => { this.setState({ delegate: result }); }
+			);
+		} else {
+			this.setState({ delegate: { amount: null } });
+		}
+	};
+
+	render() {
+		var delegate = this.state.delegate;
+		if (!delegate) delegate = { amount: 0 };
+		var desc;
+		if (delegate.delegatee) {
+			desc = (
+				<span>
+					{coinVerbose(delegate.amount)} to
+					account {accountLink(delegate.delegatee)}
+				</span>
+			);
+		} else {
+			desc = 'none';
+		}
+		return ( <KeyValueRow k="Delegate" v={desc}/> );
 	}
 }
 
