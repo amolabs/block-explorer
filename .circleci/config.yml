@@ -41,5 +41,4 @@ jobs:
 
       # save artifacts
       - store_artifacts:
-          paths: build
-          prefix: build
+          paths: ./build
