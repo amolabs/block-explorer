@@ -83,6 +83,11 @@ const NavMenu = ({ pathName }) => {
 				link={'/demo'}
 				curr={pathName}
 			/>
+			<NavItem
+				name={'Wallet'}
+				link={'/wallet'}
+				curr={pathName}
+			/>
 		</ul>
 	);
 };

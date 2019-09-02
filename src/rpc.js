@@ -328,6 +328,46 @@ function signTx(tx, key) {
 	return tx;
 }
 
+export function transfer(recp, amount, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'transfer',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			to: recp.toUpperCase(),
+			amount: amount,
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
+export function delegate(delegatee, amount, sender, callback, errCallback) {
+	if (!sender || !sender.ecKey) {
+		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});
+		return;
+	}
+
+	var tx = {
+		type: 'delegate',
+		sender: sender.address.toUpperCase(),
+		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
+		payload: {
+			to: delegatee.toUpperCase(),
+			amount: amount,
+		},
+	};
+
+	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
+	sendTx(rawTx, callback, errCallback);
+}
+
 export function registerParcel(parcel, sender, callback, errCallback) {
 	if (!sender || !sender.ecKey) {
 		errCallback({message: 'no sender key', data: 'sender.ecKey is null'});

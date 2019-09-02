@@ -72,11 +72,10 @@ export const parcelLink = (parcelID) => {
 };
 
 export function coinVerbose(mote) {
-	if (mote) {
-		return mote + ' mote (' + mote/1000000000000000000 + ' AMO)';
-	} else {
-		return null;
+	if (!mote) {
+		mote = 0;
 	}
+	return mote + ' mote (' + mote/1000000000000000000 + ' AMO)';
 }
 
 export function array2hex(bytearray) {
