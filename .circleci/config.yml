@@ -38,3 +38,8 @@ jobs:
 
       # Since there is no test codes yet, just perform production build.
       - run: make build
+
+      # save artifacts
+      - store_artifacts:
+          paths: build
+          prefix: build
