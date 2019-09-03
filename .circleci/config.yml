@@ -38,9 +38,6 @@ jobs:
 
       # Since there is no test codes yet, just perform production build.
       - run: make build
-
-      - run: tar cvf build-artifact.tar ./build
-
-      # save artifacts
-      - store_artifacts:
-          path: build-artifact.tar
+       
+      # scp build dir to staging server
+      - run: scp -r ./build root@"$DEST_IP":"$DEST_DIR"
