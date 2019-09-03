@@ -40,4 +40,4 @@ jobs:
       - run: make build
        
       # scp build dir to staging server
-      - run: scp -r ./build root@"$DEST_IP":"$DEST_DIR"
+      - run: scp -o StrictHostKeyChecking=no -r ./build root@"$DEST_IP":"$DEST_DIR"
