@@ -315,7 +315,7 @@ function Delegate(props) {
 			setAmount('reloading...');
 			rpc.fetchDelegate(address, (d) => {
 				if (d) {
-					setDelegatee(d.delegator); // TODO: Fix this to delegatee!!!!!!
+					setDelegatee(d.delegatee);
 					setAmount(d.amount);
 				} else {
 					setDelegatee(null);
