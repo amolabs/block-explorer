@@ -66,6 +66,20 @@ function doDelegate(delegatee, amount, ecKey, cb) {
 	}
 }
 
+function doRetract(amount, ecKey, cb) {
+	if (amount && ecKey) {
+		var sender = {
+			address: util.pub2address(ecKey.getPublic().encode()),
+			ecKey: ecKey
+		};
+		rpc.retract(
+			amount, sender,
+			(res) => {cb();},
+			(err) => {cb();},
+		);
+	}
+}
+
 // TODO: validation for all HEX input boxes
 
 function Wallet() {
@@ -291,6 +305,7 @@ function Delegate(props) {
 	const [amount, setAmount] = useState(0);
 	const [toDelegate, setToDelegate] = useState(null);
 	const [toAmount, setToAmount] = useState(0);
+	const [retractAmount, setRetractAmount] = useState(0);
 	const [processing, setProcessing] = useState(false);
 	useEffect(() => {
 		if (props.ecKey) {
@@ -342,7 +357,7 @@ function Delegate(props) {
 				Delegator (myself): {address?address:'none'}
 			</div>
 			<div className="container">
-				Delegatee (stakeholder): {delegatee?delegatee:'none'}
+				Delegatee (stakeholder): {delegatee?util.accountLink(delegatee):'none'}
 			</div>
 			<div className="container">
 				Amount: {amount?util.coinVerbose(amount):0}
@@ -377,6 +392,35 @@ function Delegate(props) {
 					disabled={!toDelegate||!toAmount||!props.ecKey||processing}
 				>
 					Delegate
+				</button>
+			</div>
+			<hr className="shallow"/>
+			<div className="container">
+				Retract Amount:&nbsp;
+				<RIENumber
+					value={retractAmount?retractAmount:'input number and press enter'}
+					propName="amount"
+					change={(prop) => {setRetractAmount(prop.amount);}}
+					className="rie-inline"
+					defaultProps={
+						retractAmount?{}:{style:{fontStyle:"italic",color:"gray"}}
+					}
+				/>
+			</div>
+			<div className="container">
+				<button
+					type="button"
+					onClick={() => {
+						setProcessing(true);
+						doRetract(retractAmount, props.ecKey, () => {
+							props.doReload();
+							setProcessing(false);
+							setRetractAmount(0);
+						});
+					}}
+					disabled={!retractAmount||!props.ecKey||processing}
+				>
+					Retract
 				</button>
 			</div>
 		</div>
