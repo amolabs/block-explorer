@@ -259,6 +259,7 @@ function Transfer(props) {
 	);
 }
 
+/*
 function Stake(props) {
 	useEffect(() => {
 		if (props.ecKey) {
@@ -293,6 +294,7 @@ function Stake(props) {
 		</div>
 	);
 }
+*/
 
 function Delegate(props) {
 	const [address, setAddress] = useState(null);
