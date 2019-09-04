@@ -111,11 +111,6 @@ function Wallet() {
 				doReload={()=>{setReload(!remoteUpdate);}}
 				ecKey={ecKey}
 			/>
-			<Stake
-				remoteUpdate={remoteUpdate}
-				doReload={()=>{setReload(!remoteUpdate);}}
-				ecKey={ecKey}
-			/>
 			<Delegate
 				remoteUpdate={remoteUpdate}
 				doReload={()=>{setReload(!remoteUpdate);}}
