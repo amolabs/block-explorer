@@ -177,10 +177,14 @@ export function fetchRecentTxs(callback) {
 export function fetchTxsByAccount(address, callback) {
 	axios.get(`${httpURL}/tx_search?query="tx.sender='${address}'"`).then(
 		res => {
-			callback(res.data.result.txs.map(tx => {
-				tx.tx = JSON.parse(atob(tx.tx))
-				return formatTx(tx);
-			}));
+			if (!res.data.error && 'txs' in res.data.result) {
+				callback(res.data.result.txs.map(tx => {
+					tx.tx = JSON.parse(atob(tx.tx))
+					return formatTx(tx);
+				}));
+			} else {
+				callback([]);
+			}
 		}
 	);
 }
@@ -189,10 +193,14 @@ export function fetchTxsByAccount(address, callback) {
 export function fetchTxsByParcel(parcel, callback) {
 	axios.get(`${httpURL}/tx_search?query="parcel.id='${parcel}'"`).then(
 		res => {
-			callback(res.data.result.txs.map(tx => {
-				tx.tx = JSON.parse(atob(tx.tx))
-				return formatTx(tx);
-			}));
+			if (!res.data.error && 'txs' in res.data.result) {
+				callback(res.data.result.txs.map(tx => {
+					tx.tx = JSON.parse(atob(tx.tx))
+					return formatTx(tx);
+				}));
+			} else {
+				callback([]);
+			}
 		}
 	);
 }
