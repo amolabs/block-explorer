@@ -236,8 +236,10 @@ export function abciQuery(type, params, onSuccess, onError) {
 	axios
 		.get(`${httpURL}/abci_query?path="/${type}"&data="${data}"`)
 		.then(res => {
-			if (res.data.error) onError(res.data.error);
-			else onSuccess(res.data.result.response.value);
+			if (res.data.error) return onError(res.data.error);
+			if (res.data.result.response.code)
+				return onError(res.data.result.response.log);
+			return onSuccess(res.data.result.response.value);
 		});
 }
 
