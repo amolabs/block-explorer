@@ -4,9 +4,9 @@ import sha256 from 'js-sha256';
 
 //const BCNODE = 'localhost:26657';
 //const BCNODE = '192.168.50.88:26657';
-//const BCNODE = '139.162.116.176:26657'; // amo-tokyo
+const BCNODE = '139.162.116.176:26657'; // amo-tokyo
 //const BCNODE = '172.105.64.192:26657'; // amo-frank2
-const BCNODE = 'vm7:26657'; // stress test vm1
+//const BCNODE = 'vm7:26657'; // stress test vm1
 const wsURL = `ws://${BCNODE}/websocket`;
 const httpURL = `http://${BCNODE}`;
 
