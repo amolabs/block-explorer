@@ -5,8 +5,9 @@ import crypto from 'crypto';
 
 //const BCNODE = 'localhost:26657';
 //const BCNODE = '192.168.50.88:26657';
-const BCNODE = '139.162.116.176:26657'; // amo-tokyo
+//const BCNODE = '139.162.116.176:26657'; // amo-tokyo
 //const BCNODE = '172.105.64.192:26657'; // amo-frank2
+const BCNODE = 'vm7:26657'; // stress test vm1
 const wsURL = `ws://${BCNODE}/websocket`;
 const httpURL = `http://${BCNODE}`;
 
@@ -128,7 +129,6 @@ function formatTx(tmTx) {
 		txResult: tmTx.tx_result,
 		type: tmTx.tx.type,
 		sender: tmTx.tx.sender,
-		nonce: tmTx.tx.nonce,
 		payload: tmTx.tx.payload,
 		pubkey: tmTx.tx.signature.pubkey,
 		sigBytes: tmTx.tx.signature.sig_bytes,
@@ -347,7 +347,6 @@ export function transfer(recp, amount, sender, callback, errCallback) {
 	var tx = {
 		type: 'transfer',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			to: recp.toUpperCase(),
 			amount: amount,
@@ -367,7 +366,6 @@ export function delegate(delegatee, amount, sender, callback, errCallback) {
 	var tx = {
 		type: 'delegate',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			to: delegatee.toUpperCase(),
 			amount: amount,
@@ -387,7 +385,6 @@ export function retract(amount, sender, callback, errCallback) {
 	var tx = {
 		type: 'retract',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			amount: amount,
 		},
@@ -406,7 +403,6 @@ export function registerParcel(parcel, sender, callback, errCallback) {
 	var tx = {
 		type: 'register',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			target: parcel.id.toUpperCase(),
 			custody: parcel.custody.toString('hex').toUpperCase(),
@@ -426,7 +422,6 @@ export function discardParcel(parcel, sender, callback, errCallback) {
 	var tx = {
 		type: 'discard',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			target: parcel.id.toUpperCase(),
 		},
@@ -445,7 +440,6 @@ export function requestParcel(parcel, payment, sender, callback, errCallback) {
 	var tx = {
 		type: 'request',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			target: parcel.id.toUpperCase(),
 			payment: payment,
@@ -465,7 +459,6 @@ export function cancelRequest(parcel, sender, callback, errCallback) {
 	var tx = {
 		type: 'cancel',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			target: parcel.id.toUpperCase(),
 		},
@@ -484,7 +477,6 @@ export function grantParcel(parcel, grantee, custody, sender, callback, errCallb
 	var tx = {
 		type: 'grant',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			target: parcel.id.toUpperCase(),
 			grantee: grantee.address.toUpperCase(),
@@ -505,7 +497,6 @@ export function revokeGrant(parcel, grantee, sender, callback, errCallback) {
 	var tx = {
 		type: 'revoke',
 		sender: sender.address.toUpperCase(),
-		nonce: crypto.randomBytes(4).toString('hex').toUpperCase(),
 		payload: {
 			target: parcel.id.toUpperCase(),
 			grantee: grantee.address.toUpperCase(),

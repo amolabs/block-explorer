@@ -45,7 +45,6 @@ class TxDetail extends Component {
 			height: "loading...",
 			sender: "loading...",
 			type: "loading...",
-			nonce: "loading...",
 			pubkey: "loading...",
 			sigBytes: "loading...",
 		}
@@ -92,7 +91,6 @@ class TxDetail extends Component {
 			const sb = JSON.stringify({
 				type: tx.type,
 				sender: tx.sender,
-				nonce: tx.nonce,
 				payload: tx.payload,
 			});
 			var ec = new EC('p256');
@@ -110,7 +108,6 @@ class TxDetail extends Component {
 				<KeyValueRow k="TxHash" v={txHashAlt} />
 				<KeyValueRow k="Position" v={position} />
 				<KeyValueRow k="Sender" v={sender} />
-				<KeyValueRow k="Nonce" v={tx.nonce} />
 				<hr className="shallow"/>
 				<KeyValueRow k="Type" v={tx.type} />
 				<TxBody tx={tx} />
