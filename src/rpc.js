@@ -1,7 +1,6 @@
 // vim: set noexpandtab ts=2 sw=2 :
 import axios from 'axios';
 import sha256 from 'js-sha256';
-import crypto from 'crypto';
 
 //const BCNODE = 'localhost:26657';
 //const BCNODE = '192.168.50.88:26657';
