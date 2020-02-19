@@ -293,7 +293,17 @@ export function fetchUsage(buyer, target, callback) {
 
 //////// send tx rpc
 
-function sendTx(tx, callback, errCallback) {
+function sendTx(tx, ecKey, callback, errCallback) {
+	axios.get(`${httpURL}/status`)
+		.then(res => {
+			tx.fee = "0";
+			tx.last_height = `${res.data.result.sync_info.latest_block_height}`;
+			var rawTx = JSON.stringify(signTx(tx, ecKey));
+			sendRawTx(rawTx, callback, errCallback);
+		});
+}
+
+function sendRawTx(tx, callback, errCallback) {
 	var escaped = tx.replace(/"/g, '\\"');
 	axios.post(`${httpURL}/broadcast_tx_commit?tx="${escaped}"`)
 		.then(res => {
@@ -302,6 +312,8 @@ function sendTx(tx, callback, errCallback) {
 				errCallback(res.data.error);
 			} else if (res.data.result.check_tx.code > 0) {
 				// abci check_tx error
+				console.log('check_tx error:', res.data.result.check_tx.code);
+				console.log(res.data.result.check_tx.info);
 				errCallback({
 					// TODO: human readable error reason
 					message: 'abci error code '+res.data.result.check_tx.code,
@@ -309,6 +321,8 @@ function sendTx(tx, callback, errCallback) {
 				});
 			} else if (res.data.result.deliver_tx.code > 0) {
 				// abci deliver_tx error
+				console.log('deliver_tx error:', res.data.result.deliver_tx.code);
+				console.log(res.data.result.deliver_tx.info);
 				errCallback({
 					// TODO: human readable error reason
 					message: 'abci error code '+res.data.result.deliver_tx.code,
@@ -328,13 +342,22 @@ function sign(sb, key) {
 }
 
 function signTx(tx, key) {
-	const sig = sign(JSON.stringify(tx), key);
-	tx.signature = {
+	// We do some weired thing to sign a tx, since the order of the fields
+	// matters.
+	var txToSign = {
+		type: tx.type,
+		sender: tx.sender,
+		fee: tx.fee,
+		last_height: tx.last_height,
+		payload: tx.payload,
+	};
+	const sig = sign(JSON.stringify(txToSign), key);
+	txToSign.signature = {
 		pubkey: key.getPublic().encode('hex'),
 		sig_bytes: sig,
 	};
 
-	return tx;
+	return txToSign;
 }
 
 export function transfer(recp, amount, sender, callback, errCallback) {
@@ -352,8 +375,7 @@ export function transfer(recp, amount, sender, callback, errCallback) {
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 export function delegate(delegatee, amount, sender, callback, errCallback) {
@@ -371,8 +393,7 @@ export function delegate(delegatee, amount, sender, callback, errCallback) {
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 export function retract(amount, sender, callback, errCallback) {
@@ -389,8 +410,7 @@ export function retract(amount, sender, callback, errCallback) {
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 export function registerParcel(parcel, sender, callback, errCallback) {
@@ -408,8 +428,7 @@ export function registerParcel(parcel, sender, callback, errCallback) {
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 export function discardParcel(parcel, sender, callback, errCallback) {
@@ -426,8 +445,7 @@ export function discardParcel(parcel, sender, callback, errCallback) {
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 export function requestParcel(parcel, payment, sender, callback, errCallback) {
@@ -445,8 +463,7 @@ export function requestParcel(parcel, payment, sender, callback, errCallback) {
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 export function cancelRequest(parcel, sender, callback, errCallback) {
@@ -463,8 +480,7 @@ export function cancelRequest(parcel, sender, callback, errCallback) {
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 export function grantParcel(parcel, grantee, custody, sender, callback, errCallback) {
@@ -483,8 +499,7 @@ export function grantParcel(parcel, grantee, custody, sender, callback, errCallb
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 export function revokeGrant(parcel, grantee, sender, callback, errCallback) {
@@ -502,8 +517,7 @@ export function revokeGrant(parcel, grantee, sender, callback, errCallback) {
 		},
 	};
 
-	var rawTx = JSON.stringify(signTx(tx, sender.ecKey));
-	sendTx(rawTx, callback, errCallback);
+	sendTx(tx, sender.ecKey, callback, errCallback);
 }
 
 //////// amo-storage rpc
