@@ -85,10 +85,8 @@ class TxDetail extends Component {
 				a block at height {blockLink(tx.height)}
 			</span>
 		);
-		var txResult;
-		if (tx.txResult === "loading...") {
-			txResult = tx.txResult;
-		} else {
+		var txResult = tx.txResult;
+		if (tx.txResult && tx.txResult.info) {
 			txResult = tx.txResult.info + " (code = "+tx.txResult.code+")";
 		}
 
