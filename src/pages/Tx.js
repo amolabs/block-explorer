@@ -86,7 +86,7 @@ class TxDetail extends Component {
 			</span>
 		);
 		var txResult;
-		if (tx.txResult == "loading...") {
+		if (tx.txResult === "loading...") {
 			txResult = tx.txResult;
 		} else {
 			txResult = tx.txResult.info + " (code = "+tx.txResult.code+")";
