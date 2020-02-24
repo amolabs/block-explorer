@@ -45,6 +45,7 @@ class TxDetail extends Component {
 			height: "loading...",
 			sender: "loading...",
 			type: "loading...",
+			txResult: "loading...",
 			pubkey: "loading...",
 			sigBytes: "loading...",
 		}
@@ -84,6 +85,12 @@ class TxDetail extends Component {
 				a block at height {blockLink(tx.height)}
 			</span>
 		);
+		var txResult;
+		if (tx.txResult == "loading...") {
+			txResult = tx.txResult;
+		} else {
+			txResult = tx.txResult.info + " (code = "+tx.txResult.code+")";
+		}
 
 		// sig
 		var valid = false;
@@ -111,6 +118,7 @@ class TxDetail extends Component {
 				<hr className="shallow"/>
 				<KeyValueRow k="Type" v={tx.type} />
 				<TxBody tx={tx} />
+				<KeyValueRow k="TxResult" v={txResult} />
 				<hr className="shallow"/>
 				<KeyValueRow k="Pubkey" v={tx.pubkey} />
 				<KeyValueRow k="Signature" v={tx.sigBytes} />
